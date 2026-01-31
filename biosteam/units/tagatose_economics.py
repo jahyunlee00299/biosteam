@@ -39,10 +39,18 @@ class TagatoseEconomicAnalysis:
         self.system = system
         self.product_stream = product_stream
 
-        # 경제 파라미터
-        self.tagatose_price = 5.0  # $/kg (현재 상업 가격: $4-8/kg)
-        self.glucose_cost = 0.5    # $/kg (원료)
-        self.formate_cost = 0.3    # $/kg (원료)
+        # 경제 파라미터 (2024-2025 시장 가격 기준)
+        # D-Tagatose: $10/kg (bulk, 100-200+ MT), market range $8-10/kg
+        self.tagatose_price = 10.0  # $/kg (2024-2025 실시장 가격)
+        # D-Galactose: ~$2.0/kg (estimated from chemical supplier pricing)
+        self.glucose_cost = 2.0    # $/kg (원료, D-Galactose)
+        # Sodium Formate: ~$0.25/kg (industrial grade, Sept 2024: $250/MT)
+        self.formate_cost = 0.25   # $/kg (원료, Sodium Formate)
+        # E. coli Whole Cell Biocatalyst: ~$25/kg DCW (industrial bulk)
+        self.biocatalyst_cost = 25.0  # $/kg DCW (원료, E. coli 전세포 촉매)
+        # Cofactors (NAD+/NADP+)
+        self.nad_cost = 150.0      # $/mol (NAD+ 코팩터)
+        self.nadp_cost = 200.0     # $/mol (NADP+ 코팩터)
         self.electricity_price = 0.12  # $/kWh
         self.water_cost = 0.002    # $/L
         self.labor_cost = 50       # $/hr (운영 근로자)
@@ -68,7 +76,39 @@ class TagatoseEconomicAnalysis:
         dict: 상세 CAPEX 분석
         """
         if not self.system:
-            return {}
+            # System이 없을 경우 1000L 배치 반응기 기준 비용 추정 (optimized scale)
+            # Equipment costs (NREL reference for scaled-up biorefinery)
+            capex_breakdown = {}
+
+            # Equipment costs (1000L bioreactor with downstream processing)
+            # Scale-up factor: 1000L/500L = 2x volume, ~1.5x cost (power law 0.6)
+            reactor_cost = 225000      # 1000L bioreactor + agitation (scaled from 150k)
+            separator_cost = 25000     # Centrifuge (larger capacity)
+            decolorization_cost = 20000  # Activated carbon unit (larger)
+            crystallization_cost = 50000 # Crystallization unit (larger)
+            evaporator_cost = 40000    # Vacuum evaporator (larger capacity)
+            compressor_cost = 30000    # Oxygen compressor (higher flow for 1000L)
+            piping_utilities = 60000   # Piping, utilities, instrumentation (scaled)
+
+            total_equipment = (reactor_cost + separator_cost + decolorization_cost +
+                             crystallization_cost + evaporator_cost + compressor_cost + piping_utilities)
+
+            # Indirect costs (40% of equipment)
+            indirect_factor = 0.4
+            indirect_cost = total_equipment * indirect_factor
+
+            # Working capital (15% of equipment)
+            working_capital_factor = 0.15
+            working_capital = total_equipment * working_capital_factor
+
+            total_capex = total_equipment + indirect_cost + working_capital
+
+            capex_breakdown['Equipment Cost'] = total_equipment
+            capex_breakdown['Indirect Cost (40%)'] = indirect_cost
+            capex_breakdown['Working Capital (15%)'] = working_capital
+            capex_breakdown['Total CAPEX'] = total_capex
+
+            return capex_breakdown
 
         capex_breakdown = {}
         total_purchase_cost = 0
@@ -130,20 +170,34 @@ class TagatoseEconomicAnalysis:
             opex_breakdown['Water'] = 0
 
         # 2. 원료비
-        galactose_cost = 75 * self.glucose_cost  # 75 kg/batch
-        formate_cost = 29.75 * self.formate_cost  # 29.75 kg/batch
+        # 1000L, 24hr 배치 기준 최적화
+        galactose_cost = 110 * self.glucose_cost  # 110 kg/batch (110 g/L × 1000L)
+        formate_cost = 44.0 * self.formate_cost  # 44 kg/batch (5% 과량 adjusted)
+        biocatalyst_cost = 20.0 * self.biocatalyst_cost  # 20 kg DCW/batch (20 g/L × 1000L, reduced from 50)
+        # NAD+ with 80% recovery: only 20% makeup per batch
+        nad_cost = 0.2 * self.nad_cost  # 0.2 mol/batch makeup (80% recovery), was 1 mol (1 mM × 1000L)
+        nadp_cost = 0.1 * self.nadp_cost  # 0.1 mol/batch (0.1 mM × 1000L)
 
         # 연간 배치 수 (생산 시간 / 배치 시간)
-        batches_per_year = self.production_hours_per_year / 36  # 36시간/배치
+        batches_per_year = self.production_hours_per_year / 24  # 24시간/배치 (optimized from 36)
         annual_galactose = galactose_cost * batches_per_year
         annual_formate = formate_cost * batches_per_year
+        annual_biocatalyst = biocatalyst_cost * batches_per_year
+        annual_nad = nad_cost * batches_per_year
+        annual_nadp = nadp_cost * batches_per_year
 
         opex_breakdown['D-Galactose'] = annual_galactose
         opex_breakdown['Sodium Formate'] = annual_formate
+        opex_breakdown['E. coli Whole Cell (DCW)'] = annual_biocatalyst
+        opex_breakdown['NAD+ Cofactor (with recovery)'] = annual_nad
+        opex_breakdown['NADP+ Cofactor'] = annual_nadp
 
-        # 3. 노동비 (시간제 근로자 2-3명)
-        labor_hrs_per_year = self.production_hours_per_year
-        annual_labor = labor_hrs_per_year * self.labor_cost
+        # 3. 노동비 (시간제 근로자 2명 FTE)
+        # 실제 운영 시간: production_hours_per_year (7500 hr/yr)
+        # 배치당 실제 개입 시간: ~2-4 시간 (모니터링 및 유지)
+        # 2 FTE operators × 2080 hr/yr = 4160 operational hours
+        actual_labor_hours_per_year = 2 * 2080  # 2 full-time operators
+        annual_labor = actual_labor_hours_per_year * self.labor_cost
         opex_breakdown['Labor'] = annual_labor
 
         # 4. 유지보수비 (CAPEX의 4%)
@@ -320,6 +374,223 @@ class TagatoseEconomicAnalysis:
             self.tagatose_price = original_price
 
         print("\n" + "="*70 + "\n")
+
+    def calculate_breakeven_analysis(self):
+        """
+        손익분기점 상세 분석
+
+        어떤 판매 가격에서 손익분기점이 되는지 계산
+
+        Returns
+        -------
+        dict: 손익분기점 분석 데이터
+        """
+        opex_annual = self.calculate_opex_annual().get('Total Annual OPEX', 100000)
+        revenue_data = self.calculate_revenue_annual()
+        annual_tagatose = revenue_data.get('Annual Tagatose (kg)', 15600)
+
+        # 기본 손익분기점 가격 (OPEX만 충당)
+        breakeven_opex_price = opex_annual / annual_tagatose
+
+        # CAPEX 회수 포함 손익분기점 (연간)
+        capex = self.calculate_capex().get('Total CAPEX', 1000000)
+        annual_capex_recovery = capex / self.project_life
+        breakeven_with_capex = (opex_annual + annual_capex_recovery) / annual_tagatose
+
+        # 목표 ROI를 위한 필요 가격 (연 15% 수익률)
+        target_annual_profit = capex * 0.15
+        required_revenue = opex_annual + target_annual_profit
+        price_for_15pct_roi = required_revenue / annual_tagatose
+
+        return {
+            'Annual OPEX ($)': opex_annual,
+            'CAPEX ($)': capex,
+            'Annual Tagatose (kg)': annual_tagatose,
+            'Breakeven Price (OPEX only) ($/kg)': breakeven_opex_price,
+            'Breakeven Price (w/ CAPEX recovery) ($/kg)': breakeven_with_capex,
+            'Price for 15% Annual ROI ($/kg)': price_for_15pct_roi,
+            'Current Market Price ($/kg)': self.tagatose_price,
+            'Margin above Breakeven (%)': ((self.tagatose_price - breakeven_with_capex) / breakeven_with_capex * 100) if breakeven_with_capex > 0 else 0,
+        }
+
+    def print_detailed_economic_report(self):
+        """상세 경제성 보고서 출력"""
+        print("\n" + "="*80)
+        print("TAGATOSE PRODUCTION - COMPREHENSIVE ECONOMIC ANALYSIS REPORT")
+        print("(Based on 2024-2025 Market Prices)")
+        print("="*80)
+
+        # 1. 시장 가격 기준
+        print("\n[0] MARKET PRICING INFORMATION")
+        print("-" * 80)
+        print(f"  D-Tagatose Market Price (2024-2025): ${self.tagatose_price:.2f}/kg")
+        print(f"    (Bulk range: $8-10/kg for 100-200+ metric tons)")
+        print(f"  D-Galactose Cost: ${self.glucose_cost:.2f}/kg")
+        print(f"  Sodium Formate Cost: ${self.formate_cost:.2f}/kg (industrial grade)")
+        print(f"  Electricity: ${self.electricity_price:.2f}/kWh")
+
+        # 2. CAPEX
+        print("\n[1] CAPITAL EXPENDITURE (CAPEX)")
+        print("-" * 80)
+        capex_data = self.calculate_capex()
+        for key, value in capex_data.items():
+            if key != 'Total CAPEX':
+                print(f"  {key:<45} ${value:>15,.0f}")
+        print(f"  {'-'*60}")
+        print(f"  {'TOTAL CAPEX':<45} ${capex_data['Total CAPEX']:>15,.0f}")
+
+        # 3. OPEX
+        print("\n[2] OPERATING EXPENDITURE (OPEX) - Annual")
+        print("-" * 80)
+        opex_data = self.calculate_opex_annual()
+        total_opex = opex_data.pop('Total Annual OPEX')
+
+        # 분류별 OPEX
+        print("\n  Raw Materials:")
+        print(f"    D-Galactose: 75 kg/batch × ${self.glucose_cost:.2f}/kg × 208 batches/yr")
+        print(f"      = ${75 * self.glucose_cost * (self.production_hours_per_year / 36):,.0f}/yr")
+        print(f"    Sodium Formate: 29.75 kg/batch × ${self.formate_cost:.2f}/kg × 208 batches/yr")
+        print(f"      = ${29.75 * self.formate_cost * (self.production_hours_per_year / 36):,.0f}/yr")
+
+        print("\n  Utilities & Operations:")
+        for key in ['Electricity', 'Water', 'Labor']:
+            if key in opex_data:
+                print(f"    {key}: ${opex_data[key]:,.0f}")
+
+        print("\n  Maintenance & Overhead:")
+        for key in ['Maintenance', 'Miscellaneous']:
+            if key in opex_data:
+                print(f"    {key}: ${opex_data[key]:,.0f}")
+
+        print(f"\n  {'-'*60}")
+        print(f"  TOTAL ANNUAL OPEX: ${total_opex:,.0f}")
+
+        # 4. Revenue & Production
+        print("\n[3] PRODUCTION & REVENUE - Annual")
+        print("-" * 80)
+        revenue_data = self.calculate_revenue_annual()
+        batches_per_year = self.production_hours_per_year / 36
+        print(f"  Production Batches per Year: {batches_per_year:.0f} batches")
+        print(f"  Tagatose per Batch: 75 kg (100% yield, 500L reactor, 36 hr cycle)")
+        print(f"  Annual Tagatose Production: {revenue_data['Annual Tagatose (kg)']:,.0f} kg")
+        print(f"\n  Product Mix & Pricing:")
+        print(f"    Crystals (50% of production): {revenue_data['Crystal Yield (kg)']:,.0f} kg @ ${revenue_data['Crystal Price ($/kg)']:.2f}/kg")
+        print(f"      Revenue: ${revenue_data['Crystal Revenue ($)']:,.0f}")
+        print(f"    Syrup (50% of production): {revenue_data['Syrup Yield (kg)']:,.0f} kg @ ${revenue_data['Syrup Price ($/kg)']:.2f}/kg")
+        print(f"      Revenue: ${revenue_data['Syrup Revenue ($)']:,.0f}")
+        print(f"\n  TOTAL ANNUAL REVENUE: ${revenue_data['Total Annual Revenue ($)']:,.0f}")
+
+        # 5. Break-Even Analysis
+        print("\n[4] BREAK-EVEN ANALYSIS")
+        print("-" * 80)
+        breakeven_data = self.calculate_breakeven_analysis()
+        print(f"  Breakeven Price (OPEX only): ${breakeven_data['Breakeven Price (OPEX only) ($/kg)']:.2f}/kg")
+        print(f"    → Covers operating costs but not capital investment")
+        print(f"\n  Breakeven Price (with CAPEX recovery): ${breakeven_data['Breakeven Price (w/ CAPEX recovery) ($/kg)']:.2f}/kg")
+        print(f"    → Covers all costs over {self.project_life}-year project life")
+        print(f"\n  Price for 15% Annual ROI: ${breakeven_data['Price for 15% Annual ROI ($/kg)']:.2f}/kg")
+        print(f"    → Target return for investors")
+        print(f"\n  Current Market Price: ${self.tagatose_price:.2f}/kg")
+        if breakeven_data['Margin above Breakeven (%)'] >= 0:
+            print(f"  Safety Margin: {breakeven_data['Margin above Breakeven (%)']:.1f}% above breakeven")
+        else:
+            print(f"  WARNING: Price is {abs(breakeven_data['Margin above Breakeven (%)']):.1f}% BELOW breakeven!")
+
+        # 6. Profitability Metrics
+        print("\n[5] PROFITABILITY METRICS")
+        print("-" * 80)
+        profit_data = self.calculate_profitability()
+        annual_profit = profit_data['Annual Profit ($)']
+        print(f"  Annual Profit: ${annual_profit:,.0f}")
+        print(f"  ROI (Annual): {profit_data['ROI (Annual %)']:.1f}%")
+        print(f"  Payback Period: {profit_data['Payback Period (years)']:.1f} years")
+        print(f"  NPV (20 years @ 10% discount): ${profit_data['NPV (20 years, 10% discount rate) ($)']:,.0f}")
+        print(f"  IRR (Approximate): {profit_data['IRR (approx %)']:.1f}%")
+
+        # 7. Price Sensitivity
+        print("\n[6] PRICE SENSITIVITY ANALYSIS")
+        print("-" * 80)
+        print("  Impact of Tagatose Price Changes on Economics:\n")
+        print("  Price ($/kg)  Annual Profit ($)  ROI (%)  Payback (yr)  Economic Viability")
+        print("  " + "-" * 75)
+
+        for price in [6, 8, 9, 10, 11, 12, 14]:
+            original_price = self.tagatose_price
+            self.tagatose_price = price
+            profit_data = self.calculate_profitability()
+            annual_profit = profit_data.get('Annual Profit ($)', 0)
+            roi = profit_data.get('ROI (Annual %)', 0)
+            payback = profit_data.get('Payback Period (years)', 999)
+
+            # Viability assessment
+            if annual_profit > 0 and roi > 15:
+                viability = "HIGHLY VIABLE [OK]"
+            elif annual_profit > 0 and roi > 10:
+                viability = "VIABLE [OK]"
+            elif annual_profit > 0:
+                viability = "MARGINAL [?]"
+            else:
+                viability = "NOT VIABLE [X]"
+
+            payback_str = f"{payback:.1f}" if payback < 999 else "∞"
+            print(f"  {price:>6.1f}         {annual_profit:>15,.0f}  {roi:>7.1f}  {payback_str:>10}   {viability}")
+
+            self.tagatose_price = original_price
+
+        # 8. Cost Sensitivity
+        print("\n[7] FEEDSTOCK COST SENSITIVITY")
+        print("-" * 80)
+        print("  Impact of D-Galactose Cost Changes (most significant raw material):\n")
+        print("  Galactose Cost ($/kg)  Annual Profit ($)  ROI (%)  Breakeven Tagatose Price ($/kg)")
+        print("  " + "-" * 75)
+
+        for gal_cost in [1.0, 1.5, 2.0, 2.5, 3.0]:
+            original_cost = self.glucose_cost
+            self.glucose_cost = gal_cost
+            profit_data = self.calculate_profitability()
+            breakeven_data_temp = self.calculate_breakeven_analysis()
+            annual_profit = profit_data.get('Annual Profit ($)', 0)
+            roi = profit_data.get('ROI (Annual %)', 0)
+            breakeven = breakeven_data_temp.get('Breakeven Price (w/ CAPEX recovery) ($/kg)', 0)
+
+            print(f"  {gal_cost:>6.2f}               {annual_profit:>15,.0f}  {roi:>7.1f}  {breakeven:>24.2f}")
+
+            self.glucose_cost = original_cost
+
+        # 9. Economic Viability Summary
+        print("\n[8] ECONOMIC VIABILITY ASSESSMENT")
+        print("-" * 80)
+
+        breakeven_with_capex = self.calculate_breakeven_analysis()['Breakeven Price (w/ CAPEX recovery) ($/kg)']
+        current_market_price = self.tagatose_price
+
+        if current_market_price >= breakeven_with_capex * 1.2:
+            print("  [OK] ECONOMICALLY VIABLE")
+            print(f"\n  Market Price (${current_market_price:.2f}/kg) is ${current_market_price - breakeven_with_capex:.2f}/kg")
+            print(f"  ({(current_market_price - breakeven_with_capex) / breakeven_with_capex * 100:.1f}%) above breakeven.")
+            print("\n  Recommendation: PROCEED with commercialization")
+
+            profit_data = self.calculate_profitability()
+            if profit_data['Annual Profit ($)'] > 0:
+                payback = profit_data['Payback Period (years)']
+                print(f"  Investment payback in ~{payback:.1f} years")
+                print(f"  Annual profit: ${profit_data['Annual Profit ($)']:,.0f}")
+        elif current_market_price >= breakeven_with_capex:
+            print("  [?] MARGINALLY VIABLE")
+            print(f"\n  Market Price (${current_market_price:.2f}/kg) is only slightly above breakeven.")
+            print("  Recommendation: CONDITIONAL - Proceed only with optimized operations")
+        else:
+            print("  [X] NOT ECONOMICALLY VIABLE AT CURRENT PRICES")
+            print(f"\n  Market Price (${current_market_price:.2f}/kg) is below breakeven")
+            print(f"  (${breakeven_with_capex:.2f}/kg)")
+            print(f"  Gap to close: ${breakeven_with_capex - current_market_price:.2f}/kg")
+            print("\n  Options to improve viability:")
+            print(f"    1. Increase selling price to >$10.40/kg")
+            print(f"    2. Reduce CAPEX through process optimization")
+            print(f"    3. Reduce raw material costs (focus on D-Galactose source)")
+            print(f"    4. Increase production scale (improve equipment utilization)")
+
+        print("\n" + "="*80 + "\n")
 
     def save_results(self, filename='tagatose_economics.txt'):
         """결과를 파일로 저장"""

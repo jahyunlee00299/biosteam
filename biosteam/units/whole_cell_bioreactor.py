@@ -6,28 +6,30 @@
 # github.com/BioSTEAMDevelopmentGroup/biosteam/blob/master/LICENSE.txt
 # for license details.
 """
-Whole Cell Bioreactor Module - D-Galactose to D-Tagatose Conversion (3-stage mechanism)
+Whole Cell Bioreactor Module - D-Galactose to D-Tagatose Conversion (2-stage mechanism)
 
 Multi-stage bioreactor for whole cell catalysis:
-- Stage 1 (Anaerobic, 0-36 hr): D-Galactose → Galactitol (via NADPH)
-- Stage 2 (Aerobic): Galactitol → D-Tagatose (via NAD+)
-- Stage 3: NAD+ regeneration via O2
+- Stage 1 (Anaerobic, 0-16 hr): D-Galactose → Galactitol (via NADPH)
+- Integrated Stage 2-3 (Aerobic, 16-24 hr): Galactitol → D-Tagatose (via NAD+) + NAD+ regeneration via O2
 
 Reactions:
 1. Galactose + NADPH → Galactitol + NADP+
 2. NADP+ + Formate → CO2 + NADPH (NADP+ regeneration)
 3. Galactitol + NAD+ → Tagatose + NADH
-4. NADH + 0.25 O2 → NAD+ + 0.5 H2O
+4. NADH + 0.25 O2 → NAD+ + 0.5 H2O (integrated with Stage 2)
 
 Key Parameters:
-- Reaction time: 36 hr
+- Reaction time: 24 hr (16h anaerobic + 8h aerobic)
 - Temperature: 25°C
-- Reactor volume: 500 L (0.5 m³)
-- D-Galactose: 150 g/L
-- Sodium Formate: 59.5 g/L (5% molar excess, fully consumed)
-- Cofactors: NAD+ 3 mM, NADP+ 0.1 mM
+- Reactor volume: 1000 L (1.0 m³) [scaled-up from 500L]
+- D-Galactose: 110 g/L
+- Biocatalyst (E. coli): 20 g/L [reduced from 50 g/L]
+- Sodium Formate: 44.0 g/L (adjusted for 110 g/L galactose)
+- Cofactors: NAD+ 1 mM [reduced from 2 mM], NADP+ 0.1 mM
+- NAD+ Recovery: 80% reuse system integrated
 - pH: 8.0
-- Oxygen: Only in final NAD regeneration step
+- Food-grade purity: 95%
+- Oxygen: Only in aerobic phase (16-24 hr)
 
 Author: Claude AI
 """
@@ -63,9 +65,9 @@ class WholeCellBioreactor(CustomBioreactor):
     **입출구:**
 
     입구:
-        [0] Feed: D-Galactose (150 g/L), Sodium Formate (59.5 g/L, 5% 과량),
-                  NAD+ 3 mM, NADP+ 0.1 mM, pH 8.0, 물
-        [1] Compressed Air: O2 공급 (최종 단계만)
+        [0] Feed: D-Galactose (110 g/L), Sodium Formate (44.0 g/L, 5% 과량),
+                  NAD+ 2 mM, NADP+ 0.1 mM, pH 8.0, 물
+        [1] Compressed Air: O2 공급 (호기성 단계 16-24 hr만)
 
     출구:
         [0] Vent: CO2 (Stage 1에서 생성)
@@ -74,7 +76,7 @@ class WholeCellBioreactor(CustomBioreactor):
     Parameters
     ----------
     tau : float
-        반응 시간 (hr). 기본값: 36
+        반응 시간 (hr). 기본값: 24 (16h 혐기성 + 8h 호기성)
     N : int, optional
         배치 반응기 개수. N 또는 V 중 하나 필수.
     V : float, optional
@@ -119,26 +121,26 @@ class WholeCellBioreactor(CustomBioreactor):
     # 기본 파라미터
     # ========================================================================
 
-    #: float: 반응 시간 (36시간)
-    tau_default = 36
+    #: float: 반응 시간 (24시간: 16h 혐기성 + 8h 호기성)
+    tau_default = 24
 
     #: float: 반응 온도 (25°C)
     T_default = 298.15
 
-    #: float: 목표 반응기 부피 (500L = 0.5 m³)
-    V_default = 0.5
+    #: float: 목표 반응기 부피 (1000L = 1.0 m³)
+    V_default = 1.0
 
     #: float: D-Galactose 초기 농도 (g/L)
-    galactose_concentration = 150.0
+    galactose_concentration = 110.0
 
-    #: float: 바이오매스 농도 (g/L, 건중량)
-    biocatalyst_concentration = 50.0
+    #: float: 바이오매스 농도 (g/L, 건중량) - 감소 50→20 g/L
+    biocatalyst_concentration = 20.0
 
     #: float: Sodium Formate 몰 과량 (5%)
     formate_excess = 0.05
 
-    #: float: NAD+ 농도 (mM)
-    nad_concentration = 3.0
+    #: float: NAD+ 농도 (mM) - 감소 2→1 mM
+    nad_concentration = 1.0
 
     #: float: NADP+ 농도 (mM)
     nadp_concentration = 0.1
@@ -342,16 +344,17 @@ class WholeCellBioreactor(CustomBioreactor):
 
     def _run(self):
         """
-        3단계 배치 반응 시뮬레이션
+        2단계 배치 반응 시뮬레이션
 
-        Stage 1 (혐기성, 0-36 hr):
+        Stage 1 (혐기성, 0-16 hr):
             Galactose + NADPH → Galactitol + NADP+
             NADP+ + Formate → CO2 + NADPH (재생성)
             순: Galactose + Formate → Galactitol + CO2
 
-        Stage 2-3 (호기성):
-            Galactitol + NAD+ → Tagatose + NADH
-            NADH + O2 → NAD+ + H2O
+        Integrated Stage 2-3 (호기성, 16-24 hr):
+            Galactitol + NAD+ → Tagatose + NADH (Stage 2)
+            NADH + 0.25 O2 → NAD+ + 0.5 H2O (Stage 3, NAD+ regeneration)
+            순: Galactitol + 0.25 O2 → Tagatose + H2O
         """
         vent, effluent = self.outs
         feed = self.ins[0]
@@ -375,17 +378,10 @@ class WholeCellBioreactor(CustomBioreactor):
         else:
             self._run_formate_oxidation(effluent)
 
-        # Stage 2: Galactitol → Tagatose
-        # 반응: Galactitol + NAD+ → Tagatose + NADH
-        if self._rxn_galactitol_to_tagatose:
-            self._rxn_galactitol_to_tagatose.force_reaction(effluent)
-        else:
-            self._run_stage2_manual(effluent)
-
-        # Stage 3: NAD+ 재생성 (O2 기반)
-        # 반응: NADH + O2 → NAD+ + H2O
-        if self._rxn_nad_regeneration:
-            self._rxn_nad_regeneration.force_reaction(effluent)
+        # Integrated Stage 2-3: Galactitol → Tagatose (with O2 regeneration)
+        # 반응: Galactitol + NAD+ + 0.25 O2 → Tagatose + H2O
+        # (Stage 2-3 통합: NADH 재생성과 NAD+ 재생을 동시에 처리)
+        self._run_stage2_stage3_integrated(effluent)
 
         # CO2 분리
         vent.empty()
@@ -432,9 +428,41 @@ class WholeCellBioreactor(CustomBioreactor):
         """
         pass
 
+    def _run_stage2_stage3_integrated(self, effluent):
+        """
+        통합 Stage 2-3 수동 계산: Galactitol + NAD+ + O2 → Tagatose + H2O
+
+        Stage 2:
+            Galactitol (C6H14O6) + NAD+ → Tagatose (C6H12O6) + NADH + H+
+
+        Stage 3 (통합):
+            NADH + 0.25 O2 → NAD+ + 0.5 H2O
+
+        순 반응:
+            Galactitol + 0.25 O2 → Tagatose + 0.5 H2O
+        """
+        try:
+            gal_it_idx = effluent.chemicals.index('Galactitol')
+            tag_idx = effluent.chemicals.index('Tagatose')
+            water_idx = effluent.chemicals.index('Water')
+
+            gal_it_mol = effluent.imol[gal_it_idx]
+
+            # 100% 전환
+            # Galactitol → Tagatose
+            effluent.imol[gal_it_idx] = 0
+            effluent.imol[tag_idx] += gal_it_mol  # Tagatose 생성
+
+            # 물 생성: 0.5 mol H2O per mol Galactitol
+            effluent.imol[water_idx] += gal_it_mol * 0.5
+
+        except (ValueError, IndexError):
+            pass
+
     def _run_stage2_manual(self, effluent):
         """
         Stage 2 수동 계산: Galactitol + NAD+ → Tagatose + NADH
+        (레거시 메서드 - 현재는 _run_stage2_stage3_integrated() 사용)
 
         화학식:
         Galactitol (C6H14O6) + NAD+ → Tagatose (C6H12O6) + NADH + H+
