@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pip show:*)",
+      "Bash(python -c:*)",
+      "Bash(jupyter nbconvert:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
