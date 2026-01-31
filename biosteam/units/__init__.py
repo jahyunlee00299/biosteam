@@ -46,6 +46,8 @@ from .auxiliary import *
 from .agitator import *
 from .nrel_bioreactor import *
 from .custom_bioreactor import *
+from .whole_cell_bioreactor import *
+from .whole_cell_process import *
 from .stirred_tank_reactor import *
 from .aerated_bioreactor import *
 from .auxiliary_pressure_vessel import *
@@ -69,6 +71,8 @@ from . import (
     nrel_bioreactor,
     custom_bioreactor,
     stirred_tank_reactor,
+    whole_cell_bioreactor,
+    whole_cell_process,
     aerated_bioreactor,
     molecular_sieve,
     vacuum_system,
@@ -135,6 +139,7 @@ __all__ = ('Unit',
            *aerated_bioreactor.__all__,
            *nrel_bioreactor.__all__,
            *custom_bioreactor.__all__,
+           *whole_cell_bioreactor.__all__,
            *adsorption.__all__,
            *compressor.__all__,
            *turbine.__all__,
