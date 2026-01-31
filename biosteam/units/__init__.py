@@ -48,6 +48,7 @@ from .nrel_bioreactor import *
 from .custom_bioreactor import *
 from .whole_cell_bioreactor import *
 from .oxygen_compressor import *
+from .tagatose_downstream import *
 from .whole_cell_process import *
 from .stirred_tank_reactor import *
 from .aerated_bioreactor import *
