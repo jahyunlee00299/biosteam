@@ -47,6 +47,7 @@ from .agitator import *
 from .nrel_bioreactor import *
 from .custom_bioreactor import *
 from .whole_cell_bioreactor import *
+from .oxygen_compressor import *
 from .whole_cell_process import *
 from .stirred_tank_reactor import *
 from .aerated_bioreactor import *
@@ -71,6 +72,7 @@ from . import (
     nrel_bioreactor,
     custom_bioreactor,
     stirred_tank_reactor,
+    oxygen_compressor,
     whole_cell_bioreactor,
     whole_cell_process,
     aerated_bioreactor,
@@ -136,6 +138,7 @@ __all__ = ('Unit',
            *_batch_crystallizer.__all__,
            *_carbon_capture.__all__,
            *drying.__all__,
+           *oxygen_compressor.__all__,
            *aerated_bioreactor.__all__,
            *nrel_bioreactor.__all__,
            *custom_bioreactor.__all__,
