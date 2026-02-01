@@ -170,16 +170,16 @@ class TagatoseEconomicAnalysis:
             opex_breakdown['Water'] = 0
 
         # 2. 원료비
-        # 1000L, 24hr 배치 기준 최적화
+        # 1000L, 24hr 배치 기준 (보고서 기준)
         galactose_cost = 110 * self.glucose_cost  # 110 kg/batch (110 g/L × 1000L)
         formate_cost = 44.0 * self.formate_cost  # 44 kg/batch (5% 과량 adjusted)
         biocatalyst_cost = 20.0 * self.biocatalyst_cost  # 20 kg DCW/batch (20 g/L × 1000L, reduced from 50)
-        # NAD+ with 80% recovery: only 20% makeup per batch
-        nad_cost = 0.2 * self.nad_cost  # 0.2 mol/batch makeup (80% recovery), was 1 mol (1 mM × 1000L)
+        # NAD+ NO RECOVERY: Complete consumption (100% makeup per batch)
+        nad_cost = 1.0 * self.nad_cost  # 1.0 mol/batch (1 mM × 1000L), 회수 불가능하므로 100% 새로 추가
         nadp_cost = 0.1 * self.nadp_cost  # 0.1 mol/batch (0.1 mM × 1000L)
 
         # 연간 배치 수 (생산 시간 / 배치 시간)
-        batches_per_year = self.production_hours_per_year / 24  # 24시간/배치 (optimized from 36)
+        batches_per_year = self.production_hours_per_year / 24  # 24시간/배치 (16h 혐기성 + 8h 호기성)
         annual_galactose = galactose_cost * batches_per_year
         annual_formate = formate_cost * batches_per_year
         annual_biocatalyst = biocatalyst_cost * batches_per_year
@@ -189,8 +189,8 @@ class TagatoseEconomicAnalysis:
         opex_breakdown['D-Galactose'] = annual_galactose
         opex_breakdown['Sodium Formate'] = annual_formate
         opex_breakdown['E. coli Whole Cell (DCW)'] = annual_biocatalyst
-        opex_breakdown['NAD+ Cofactor (with recovery)'] = annual_nad
-        opex_breakdown['NADP+ Cofactor'] = annual_nadp
+        opex_breakdown['NAD+ Cofactor (NO recovery - discarded)'] = annual_nad
+        opex_breakdown['NADP+ Cofactor (NO recovery - discarded)'] = annual_nadp
 
         # 3. 노동비 (시간제 근로자 2명 FTE)
         # 실제 운영 시간: production_hours_per_year (7500 hr/yr)
@@ -221,17 +221,17 @@ class TagatoseEconomicAnalysis:
         Parameters
         ----------
         product_concentration : float, optional
-            생성물 농도 (기본값: 75kg 타가토스/배치)
+            생성물 농도 (기본값: 34.375kg 타가토스/배치)
 
         Returns
         -------
         dict: 수익 분석
         """
         if product_concentration is None:
-            product_concentration = 75  # kg/배치 (500L 기준)
+            product_concentration = 110.0  # kg/배치 (1000L 기준, 110 g/L × 1000L = 110kg galactose → 110kg tagatose, 100% theoretical yield)
 
         # 연간 배치 수
-        batches_per_year = self.production_hours_per_year / 36  # 36시간/배치
+        batches_per_year = self.production_hours_per_year / 24  # 24시간/배치
 
         # 연간 타가토스 생산량
         annual_tagatose_kg = product_concentration * batches_per_year

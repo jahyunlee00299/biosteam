@@ -45,11 +45,11 @@ from .adsorption import *
 from .auxiliary import *
 from .agitator import *
 from .nrel_bioreactor import *
-from .custom_bioreactor import *
-from .whole_cell_bioreactor import *
-from .oxygen_compressor import *
-from .tagatose_downstream import *
-from .whole_cell_process import *
+# from .custom_bioreactor import *  # ARCHIVED: 2026-02-01
+# from .whole_cell_bioreactor import *  # ARCHIVED: 2026-02-01
+# from .oxygen_compressor import *  # ARCHIVED: 2026-02-01
+# from .tagatose_downstream import *  # ARCHIVED: 2026-02-01
+# from .whole_cell_process import *  # ARCHIVED: 2026-02-01
 from .stirred_tank_reactor import *
 from .aerated_bioreactor import *
 from .auxiliary_pressure_vessel import *
@@ -57,44 +57,44 @@ from .fluidized_catalytic_cracking import *
 from .single_phase_reactor import *
 
 from . import (
-    _flash, 
-    _pump, 
-    _multi_effect_evaporator, 
+    _flash,
+    _pump,
+    _multi_effect_evaporator,
     _magnetic_separator,
-    _conveying_belt, 
+    _conveying_belt,
     _vent_scrubber,
     _vibrating_screen,
     _junction,
     _scaler,
-    _enzyme_treatment, 
-    _clarifier, 
-    _balance,  
+    _enzyme_treatment,
+    _clarifier,
+    _balance,
     _screw_feeder,
     nrel_bioreactor,
-    custom_bioreactor,
+    # custom_bioreactor,  # ARCHIVED: 2026-02-01
     stirred_tank_reactor,
-    oxygen_compressor,
-    whole_cell_bioreactor,
-    whole_cell_process,
+    # oxygen_compressor,  # ARCHIVED: 2026-02-01
+    # whole_cell_bioreactor,  # ARCHIVED: 2026-02-01
+    # whole_cell_process,  # ARCHIVED: 2026-02-01
     aerated_bioreactor,
     molecular_sieve,
     vacuum_system,
     adsorption,
-    size_reduction, 
+    size_reduction,
     size_enlargement,
     drying,
-    distillation, 
+    distillation,
     tank,
-    liquid_liquid_extraction, 
-    mixing, 
-    splitting, 
+    liquid_liquid_extraction,
+    mixing,
+    splitting,
     stage,
-    heat_exchange, 
+    heat_exchange,
     solids_separation,
-    decorators, 
-    design_tools, 
+    decorators,
+    design_tools,
     _duplicator,
-    _diagram_only_units, 
+    _diagram_only_units,
     _batch_crystallizer,
     _carbon_capture,
     compressor,
@@ -132,18 +132,18 @@ __all__ = ('Unit',
            *_clarifier.__all__,
            *size_reduction.__all__,
            *size_enlargement.__all__,
-           *_balance.__all__, 
+           *_balance.__all__,
            *_screw_feeder.__all__,
            *_magnetic_separator.__all__,
            *_duplicator.__all__,
            *_batch_crystallizer.__all__,
            *_carbon_capture.__all__,
            *drying.__all__,
-           *oxygen_compressor.__all__,
+           # *oxygen_compressor.__all__,  # ARCHIVED: 2026-02-01
            *aerated_bioreactor.__all__,
            *nrel_bioreactor.__all__,
-           *custom_bioreactor.__all__,
-           *whole_cell_bioreactor.__all__,
+           # *custom_bioreactor.__all__,  # ARCHIVED: 2026-02-01
+           # *whole_cell_bioreactor.__all__,  # ARCHIVED: 2026-02-01
            *adsorption.__all__,
            *compressor.__all__,
            *turbine.__all__,

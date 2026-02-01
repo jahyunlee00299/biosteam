@@ -3,7 +3,17 @@
     "allow": [
       "Bash(pip show:*)",
       "Bash(python -c:*)",
-      "Bash(jupyter nbconvert:*)"
+      "Bash(jupyter nbconvert:*)",
+      "Bash(python:*)",
+      "Bash(timeout 30 python:*)",
+      "Bash(powershell -Command:*)",
+      "Bash(dot:*)",
+      "WebSearch",
+      "WebFetch(domain:prozomix.com)",
+      "WebFetch(domain:biotechnologyforbiofuels.biomedcentral.com)",
+      "WebFetch(domain:pmc.ncbi.nlm.nih.gov)",
+      "WebFetch(domain:link.springer.com)",
+      "WebFetch(domain:www.alibaba.com)"
     ],
     "deny": [],
     "ask": []
