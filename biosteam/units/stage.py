@@ -1525,7 +1525,7 @@ class PhasePartition(Unit):
     _N_ins = 1
     _N_outs = 2
     strict_infeasibility_check = False
-    conversion_relaxation_factor = 0.5
+    conversion_relaxation_factor = 0
     S_relaxation_factor = 0
     B_relaxation_factor = 0
     K_relaxation_factor = 0
@@ -2088,7 +2088,8 @@ class MultiStageEquilibrium(Unit):
     iteration_memory = 5 # Length of recorded iterations.
     preconditioning_tolerance = 1e-3
     preconditioning_relative_tolerance = 1e-3
-    homotopy_continuation_steps = 5
+    homotopy_continuation_steps = 3
+    internal_homotopy_continuation_steps = 6
     inside_maxiter = 100
     default_max_attempts = 2
     default_maxiter = 100
@@ -2404,8 +2405,7 @@ class MultiStageEquilibrium(Unit):
             self.methods = len(self.algorithms) * (methods,)
         else:
             self.methods = methods
-        
-        self.homotopy_continuation = bool(stage_reactions)
+        self.homotopy_continuation = self.internal_homotopy_continuation = bool(stage_reactions)
         self.vle_decomposition = vle_decomposition
     
     
@@ -2625,12 +2625,16 @@ class MultiStageEquilibrium(Unit):
                             else:
                                 break
                         steps = self.homotopy_continuation_steps
-                        for t in np.linspace(0, 1, steps):
+                        step_size = 1 / (steps - 1)
+                        self.internal_conversion_homotopy_step_size = step_size / (self.internal_homotopy_continuation_steps - 1)
+                        self.max_conversion_homotopy = 0
+                        for i in range(steps):
+                            self.conversion_homotopy = self.max_conversion_homotopy
+                            self.max_conversion_homotopy = min(self.conversion_homotopy + step_size, 1)
                             if analysis_mode:
                                 self._tracked_homotopy.append(
-                                    (self.iter + 1, t)
+                                    (self.iter + 1, self.conversion_homotopy)
                                 )
-                            self.conversion_homotopy = t
                             try:
                                 x = solver(f, x, maxiter=maxiter, xtol=xtol, rtol=rtol, args=(algorithm,))
                             except:
@@ -2708,6 +2712,11 @@ class MultiStageEquilibrium(Unit):
             raise RuntimeError(f'invalid algorithm {algorithm!r}')
         x1 = self._new_point(x1)
         if self._convergence_analysis_mode: self._tracked_points[self.iter] = x1
+        if self.internal_homotopy_continuation:
+            self.conversion_homotopy = min(
+                self.conversion_homotopy + self.internal_conversion_homotopy_step_size,
+                self.max_conversion_homotopy
+            )
         return x1
     
     # %% Inside-out simulation
@@ -3695,6 +3704,7 @@ class MultiStageEquilibrium(Unit):
             plot=True,
             verbose=True,
             solver_kwargs=None,
+            legend=True,
         ):
         if solver_kwargs is None: solver_kwargs = {}
         x0 = self.hot_start() if x0 is None else x0
@@ -3759,6 +3769,11 @@ class MultiStageEquilibrium(Unit):
                     x = self._new_point(x, verbose)
                     self.iter += 1
                     points[self.iter] = x
+                    if self.internal_homotopy_continuation:
+                        self.conversion_homotopy = min(
+                            self.conversion_homotopy + self.internal_conversion_homotopy_step_size,
+                            self.max_conversion_homotopy
+                        )
                     return x
                 
                 if method is None: method = 'fixed-point'
@@ -3770,15 +3785,19 @@ class MultiStageEquilibrium(Unit):
                     raise ValueError('unknown method')
                 maxiter = iterations - 1
                 if self.homotopy_continuation:
-                    steps = self.homotopy_continuation_steps
                     xtol = self.tolerance
                     rtol = self.relative_tolerance
                     x = x0
-                    for t in np.linspace(0, 1, steps):
+                    steps = self.homotopy_continuation_steps
+                    step_size = 1 / (steps - 1)
+                    self.internal_conversion_homotopy_step_size = step_size / (self.internal_homotopy_continuation_steps - 1)
+                    self.max_conversion_homotopy = 0
+                    for i in range(steps):
+                        self.conversion_homotopy = self.max_conversion_homotopy
+                        self.max_conversion_homotopy = min(self.conversion_homotopy + step_size, 1)
                         homotopy.append(
-                            (self.iter + 1, t)
+                            (self.iter + 1, self.conversion_homotopy)
                         )
-                        self.conversion_homotopy = t
                         try: 
                             x = solver(
                                 f, x, maxiter=int(maxiter / steps), xtol=xtol, rtol=rtol, 
@@ -3791,6 +3810,7 @@ class MultiStageEquilibrium(Unit):
                             self._mean_residual = inf
                             self._iteration_record[0] = IterationResult(None, inf)
                             self._best_result = IterationResult(x, inf)
+                        if self.conversion_homotopy == 1: break
                 else:
                     try:
                         x = solver(
@@ -3843,13 +3863,15 @@ class MultiStageEquilibrium(Unit):
             elif homotopy:
                 start_marks, homotopy = zip(*homotopy)
                 end_marks = [*start_marks[1:], iterations]
+                steps = self.homotopy_continuation_steps
+                step_size = 1 / (steps - 1)
                 for start, end, h, c in zip(start_marks, end_marks, homotopy, GG_colors):
                     plt.axvline(start, color=c.RGBn, zorder=-1)
                     plt.scatter(
                         iteration[start:end],
                         log_residual[start:end],
                         color=c.RGBn,
-                        label=format(h, '.0%'),
+                        label=f'{h:.0%} to {min(h+step_size, 1):.0%} reaction efficiency',
                     )
             else:
                 plt.scatter(
@@ -3868,7 +3890,7 @@ class MultiStageEquilibrium(Unit):
                 plt.xlim([xticks[0], xticks[-1]])
             plt.xlabel('Iteration')
             plt.ylabel('log residual')
-            plt.legend()
+            if legend: plt.legend()
         time = np.array(timer.record)
         N = min(time.size, iteration.size, log_residual.size)
         return ResidualProfile(time[:N], iteration[:N], log_residual[:N])

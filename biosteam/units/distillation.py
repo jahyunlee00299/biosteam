@@ -2973,12 +2973,13 @@ class MESHDistillation(MultiStageEquilibrium, new_graphics=False):
         hw = weir_height = self._TS * self.weir_height * 0.0393701 # mm to inches
         area = diameter * diameter * pi / 4
         b = 2/3
+        stages = self.stages
         partitions = self.partitions
         for i in self.stage_reactions:
             partition = partitions[i]
             vapor, liquid = partition.outs
             if liquid.isempty():
-                partition.reaction.liquid_volume = 0
+                stages[i].liquid_holdup_volume = 0
                 continue
             elif vapor.isempty():
                 Ks = 0
@@ -2994,7 +2995,7 @@ class MESHDistillation(MultiStageEquilibrium, new_graphics=False):
             qL = liquid.get_total_flow('gal/min')
             CL = 0.362 + 0.317 * exp(-3.5 * weir_height)
             hL = Phi_e * (hw + CL * (qL / (Lw * Phi_e)) ** b) # equivalent height of clear liquid holdup [in]
-            partition.reaction.liquid_volume = hL * area * 0.00236155 # m3 
+            stages[i].liquid_holdup_volume = hL * area * 0.00236155 # m3 
        
     def estimate_diameter(self): # ft
         diameters = []
