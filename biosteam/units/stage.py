@@ -1785,7 +1785,8 @@ class PhasePartition(Unit):
         f = self.conversion_relaxation_factor if relaxation_factor is None else relaxation_factor
         old = self.conversion
         new = self.reaction.conversion(bottom)
-        self.conversion[:] = f * old + (1 - f) * new
+        index = self.chemicals.indices(self.IDs)
+        self.conversion[:] = f * old + (1 - f) * new[index]
     
     def _run_lle(self, P=None, update=True, top_chemical=None, single_loop=False):
         if top_chemical is None: top_chemical = self.top_chemical
@@ -3024,7 +3025,7 @@ class MultiStageEquilibrium(Unit):
         if self.stage_reactions:
             nonzero = set()
             for rxn in self.stage_reactions.values():
-                nonzero.update(rxn.stoichiometry.nonzero_keys())
+                nonzero.update(rxn.reaction_indices())
             all_IDs = set(IDs)
             for i in nonzero:
                 ID = chemicals.IDs[i]
@@ -3195,6 +3196,7 @@ class MultiStageEquilibrium(Unit):
                     b = 1 - a
                     x = a * dp.x + b * bp.x
                     x /= x.sum()
+                    x[x == 0] = 1
                     y = a * dp.y + b * bp.y
                     y /= y.sum()
                     partition.K = K = y / x
@@ -3871,7 +3873,7 @@ class MultiStageEquilibrium(Unit):
                         iteration[start:end],
                         log_residual[start:end],
                         color=c.RGBn,
-                        label=f'{h:.0%} to {min(h+step_size, 1):.0%} reaction efficiency',
+                        label=f'{int(h*100)} - {min(h+step_size, 1):.0%} reaction efficiency',
                     )
             else:
                 plt.scatter(
