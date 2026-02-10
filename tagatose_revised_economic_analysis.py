@@ -86,10 +86,10 @@ class TagatoseEconomicsSyrupOnly(TagatoseEconomicAnalysis):
         # Raw materials (110 g/L, 110 kg per batch for 1000L)
         galactose_cost = 110 * self.glucose_cost  # 110 kg per batch
         formate_cost = 44.0 * self.formate_cost  # Adjusted for 110 g/L, 1000L
-        cells_cost = 20.0 * 25.0  # 20 kg DCW per batch × $25/kg (reduced from 50 g/L to 20 g/L)
+        cells_cost = 20.0 * 50.0  # 20 kg DCW per batch × $50/kg (revised estimate)
         # NAD+ with 80% recovery: only 20% makeup needed per batch
-        nad_cost = 0.2 * 150.0  # 0.2 mol/batch makeup × $150/mol (80% recovery)
-        nadp_cost = 0.1 * 200.0  # 0.1 mol/batch × $200/mol (reduced from 0.05)
+        nad_cost = 0.2 * 710.0  # 0.2 mol/batch makeup × $710/mol (80% recovery, Tufvesson 2011)
+        nadp_cost = 0.1 * 5000.0  # 0.1 mol/batch × $5,000/mol (Tufvesson 2011)
 
         batches_per_year = self.production_hours_per_year / 24
         annual_galactose = galactose_cost * batches_per_year
@@ -183,10 +183,10 @@ class TagatoseEconomicsCrystalOnly(TagatoseEconomicAnalysis):
         # Raw materials (110 g/L, 110 kg per batch for 1000L)
         galactose_cost = 110 * self.glucose_cost  # 110 kg per batch
         formate_cost = 44.0 * self.formate_cost  # Adjusted for 110 g/L, 1000L
-        cells_cost = 20.0 * 25.0  # 20 kg DCW per batch (reduced from 50 g/L to 20 g/L)
+        cells_cost = 20.0 * 50.0  # 20 kg DCW per batch × $50/kg (revised estimate)
         # NAD+ with 80% recovery: only 20% makeup needed per batch
-        nad_cost = 0.2 * 150.0  # 0.2 mol/batch makeup × $150/mol (80% recovery)
-        nadp_cost = 0.1 * 200.0  # 0.1 mol/batch × $200/mol (reduced from 0.05)
+        nad_cost = 0.2 * 710.0  # 0.2 mol/batch makeup × $710/mol (80% recovery, Tufvesson 2011)
+        nadp_cost = 0.1 * 5000.0  # 0.1 mol/batch × $5,000/mol (Tufvesson 2011)
 
         batches_per_year = self.production_hours_per_year / 24
         annual_galactose = galactose_cost * batches_per_year

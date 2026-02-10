@@ -48,9 +48,9 @@ water_per_batch_kg = 400  # 약 400 kg (용매)
 # 가격 데이터
 galactose_price = 2.00  # $/kg
 formate_price = 0.25    # $/kg
-cells_price = 25.0      # $/kg DCW (E. coli K-12 산업용)
-nad_price = 150.0       # $/mol (실험실 등급 기준)
-nadp_price = 200.0      # $/mol
+cells_price = 50.0      # $/kg DCW (E. coli K-12 산업용, revised estimate)
+nad_price = 710.0       # $/mol (Tufvesson et al. 2011, bulk industrial)
+nadp_price = 5000.0     # $/mol (Tufvesson et al. 2011, bulk industrial)
 water_price = 0.002     # $/L
 
 # 활성탄 (탈색 공정)
@@ -519,56 +519,48 @@ print("\n" + "="*100)
 print("[10] COST STRUCTURE HIERARCHY - Tree View")
 print("="*100)
 
-print("""
-TOTAL COST STRUCTURE (Annual)
-├── CAPITAL EXPENDITURE (One-time): $511,500
-│   ├── Equipment & Installation: $330,000
-│   │   ├── Bioreactor System: $150,000
-│   │   ├── Oxygen Compressor: $25,000
-│   │   ├── Centrifuge: $20,000
-│   │   ├── Decolorization Unit: $15,000
-│   │   ├── Crystallization Unit: $40,000
-│   │   └── Evaporator: $30,000
-│   ├── Indirect Costs (40%): $132,000
-│   └── Working Capital (15%): $49,500
+print(f"""
+TOTAL COST STRUCTURE (Annual) - Cofactor prices: Tufvesson et al. (2011)
+├── CAPITAL EXPENDITURE (One-time): ${total_capex:,.0f}
+│   ├── Equipment & Installation: ${unit_capex_total:,.0f}
+│   │   ├── Bioreactor System: $225,000
+│   │   ├── Oxygen Compressor: $30,000
+│   │   ├── Centrifuge: $25,000
+│   │   ├── Decolorization Unit: $20,000
+│   │   ├── Crystallization Unit: $50,000
+│   │   └── Evaporator: $40,000
+│   ├── Indirect Costs (40%): ${indirect_capex:,.0f}
+│   └── Working Capital (15%): ${working_capital:,.0f}
 │
-└── OPERATING EXPENDITURE (Annual): $274,784
-    ├── RAW MATERIALS: $67,439 (24.5%)
-    │   ├── Main Substrates: $63,281
-    │   │   ├── D-Galactose: $34,375
-    │   │   └── Sodium Formate: $1,719
-    │   ├── Cofactors: $2,475
-    │   │   ├── NAD+: $1,500
-    │   │   └── NADP+: $975
-    │   └── Solvent & Auxiliaries: $1,683
-    │       ├── Water: $312
-    │       └── Miscellaneous Chemicals: $1,371
+└── OPERATING EXPENDITURE (Annual): ${total_opex:,.0f}
+    ├── RAW MATERIALS: ${raw_materials_total:,.0f}
+    │   ├── Main Substrates:
+    │   │   ├── D-Galactose: ${raw_materials['D-Galactose (Main Substrate)']['qty_per_year'] * raw_materials['D-Galactose (Main Substrate)']['unit_price']:,.0f}
+    │   │   └── Sodium Formate: ${raw_materials['Sodium Formate (Co-substrate)']['qty_per_year'] * raw_materials['Sodium Formate (Co-substrate)']['unit_price']:,.0f}
+    │   ├── E. coli Biocatalyst: ${raw_materials['E. coli Whole Cell Biocatalyst (DCW)']['qty_per_year'] * raw_materials['E. coli Whole Cell Biocatalyst (DCW)']['unit_price']:,.0f}
+    │   ├── Cofactors (Tufvesson 2011 prices): ${raw_materials['NAD+ Cofactor']['qty_per_year'] * nad_price + raw_materials['NADP+ Cofactor']['qty_per_year'] * nadp_price:,.0f} ← CRITICAL COST DRIVER
+    │   │   ├── NAD+ ($710/mol, 80% recovery): ${raw_materials['NAD+ Cofactor']['qty_per_year'] * nad_price:,.0f}
+    │   │   └── NADP+ ($5,000/mol): ${raw_materials['NADP+ Cofactor']['qty_per_year'] * nadp_price:,.0f}
+    │   └── Solvent & Auxiliaries:
+    │       ├── Water: ${raw_materials['Water (Solvent)']['qty_per_year'] * raw_materials['Water (Solvent)']['unit_price']:,.0f}
+    │       └── Miscellaneous Chemicals: ${raw_materials['Miscellaneous Chemicals (pH, Cleaning)']['qty_per_year'] * raw_materials['Miscellaneous Chemicals (pH, Cleaning)']['unit_price']:,.0f}
     │
-    ├── PURIFICATION MATERIALS: $3,437 (1.3%)
-    │   └── Activated Carbon: $3,437
+    ├── PURIFICATION MATERIALS:
+    │   └── Activated Carbon: ${raw_materials['Activated Carbon (Decolorization)']['qty_per_year'] * raw_materials['Activated Carbon (Decolorization)']['unit_price']:,.0f}
     │
-    ├── ENERGY & UTILITIES: $11,737 (4.3%)
-    │   ├── Electricity: $10,237
-    │   └── Cooling Water & Compressed Air: $1,500
+    ├── ENERGY & UTILITIES: ${energy_cost_total + utilities_total:,.0f}
+    │   ├── Electricity: ${energy_cost_total:,.0f}
+    │   └── Cooling Water & Compressed Air: ${utilities_total:,.0f}
     │
-    ├── BIOREACTOR OPERATION: (included in Energy)
-    │   ├── Agitation: 5 kW × 312.5 batches × 24 hr
-    │   └── Oxygen Compression: 2.5 kW × 312.5 batches × 8 hr
-    │
-    ├── LABOR: $208,000 (75.7%) ← DOMINANT COST
+    ├── LABOR: ${annual_labor_cost:,.0f}
     │   ├── Batch Preparation: $31,250
     │   ├── Active Monitoring: $46,875
     │   ├── Downstream Processing: $31,250
     │   └── Finishing & QA: $23,438
     │
-    ├── PURIFICATION PROCESSING: (included in Energy + Materials)
-    │   ├── Centrifugation: ~$3,000 consumables
-    │   ├── Decolorization: ~$3,400 (carbon)
-    │   └── Crystallization/Evaporation: ~$4,700 consumables
-    │
-    └── MAINTENANCE & OVERHEAD: $30,690 (11.2%)
-        ├── Preventive Maintenance (4% CAPEX): $20,460
-        └── Miscellaneous (2% CAPEX): $10,230
+    └── MAINTENANCE & OVERHEAD: ${maintenance_total:,.0f}
+        ├── Preventive Maintenance (4% CAPEX): ${total_capex * 0.04:,.0f}
+        └── Miscellaneous (2% CAPEX): ${total_capex * 0.02:,.0f}
 """)
 
 # ============================================================================
