@@ -48,9 +48,9 @@ class TagatoseEconomicAnalysis:
         self.formate_cost = 0.25   # $/kg (원료, Sodium Formate)
         # E. coli Whole Cell Biocatalyst: ~$25/kg DCW (industrial bulk)
         self.biocatalyst_cost = 25.0  # $/kg DCW (원료, E. coli 전세포 촉매)
-        # Cofactors (NAD+/NADP+)
-        self.nad_cost = 150.0      # $/mol (NAD+ 코팩터)
-        self.nadp_cost = 200.0     # $/mol (NADP+ 코팩터)
+        # Cofactors (NAD+/NADP+) - Tufvesson et al. (2011) Org. Process Res. Dev. bulk pricing
+        self.nad_cost = 710.0      # $/mol (NAD+ 코팩터, bulk industrial)
+        self.nadp_cost = 5000.0    # $/mol (NADP+ 코팩터, bulk industrial)
         self.electricity_price = 0.12  # $/kWh
         self.water_cost = 0.002    # $/L
         self.labor_cost = 50       # $/hr (운영 근로자)
@@ -166,8 +166,19 @@ class TagatoseEconomicAnalysis:
             water_cost = water_consumption * self.water_cost
             opex_breakdown['Water'] = water_cost
         else:
-            opex_breakdown['Electricity'] = 0
-            opex_breakdown['Water'] = 0
+            # system=None: 1000L 스케일 기준 유틸리티 추정
+            # 교반기 (~3 kW) + 산소압축기 (~2 kW) + 냉각/가열 (~2 kW) + 다운스트림 (~3 kW) = ~10 kW 평균
+            # 연간: 10 kW × 7500 hr/yr × 0.7 부하율 = 52,500 kWh/yr
+            estimated_electricity_kWh = 10.0 * self.production_hours_per_year * 0.7
+            electricity_cost = estimated_electricity_kWh * self.electricity_price
+            opex_breakdown['Electricity'] = electricity_cost
+
+            # 물 사용: 반응기 충진 (~1000L/batch) + 냉각수 (~500L/batch) + 세척 (~200L/batch)
+            # 총 ~1700 L/batch × 312.5 batches/yr = 531,250 L/yr
+            batches_per_year_util = self.production_hours_per_year / 24
+            water_consumption_L = 1700 * batches_per_year_util
+            water_cost = water_consumption_L * self.water_cost
+            opex_breakdown['Water'] = water_cost
 
         # 2. 원료비
         # 1000L, 24hr 배치 기준 (보고서 기준)
@@ -292,10 +303,32 @@ class TagatoseEconomicAnalysis:
             discounted_profit = annual_profit / ((1 + self.discount_rate) ** year)
             npv += discounted_profit
 
-        # 4. IRR (Internal Rate of Return) - 간단 근사
-        # IRR은 NPV = 0인 할인율
-        # 단순 근사: (Annual Profit / Avg CAPEX) * 100
-        irr_approx = (annual_profit / (capex / 2)) * 100
+        # 4. IRR (Internal Rate of Return) - bisection method
+        # IRR은 NPV = 0을 만족하는 할인율, bisection으로 수렴
+        def npv_at_rate(rate):
+            if rate <= -1:
+                return float('inf')
+            return -capex + sum(
+                annual_profit / ((1 + rate) ** yr)
+                for yr in range(1, self.project_life + 1)
+            )
+
+        irr_approx = 0.0
+        if annual_profit > 0:
+            low, high = 0.0, 10.0  # 0% ~ 1000%
+            for _ in range(100):  # 최대 100회 반복으로 수렴
+                mid = (low + high) / 2
+                if npv_at_rate(mid) > 0:
+                    low = mid
+                else:
+                    high = mid
+                if high - low < 1e-6:
+                    break
+            irr_approx = (low + high) / 2 * 100
+        elif annual_profit == 0:
+            irr_approx = 0.0
+        else:
+            irr_approx = float('-inf')  # 손실 → IRR 없음
 
         # 5. Break-even analysis
         break_even_price = opex_annual / self.calculate_revenue_annual().get('Annual Tagatose (kg)', 1)
@@ -445,12 +478,17 @@ class TagatoseEconomicAnalysis:
         opex_data = self.calculate_opex_annual()
         total_opex = opex_data.pop('Total Annual OPEX')
 
-        # 분류별 OPEX
+        # 분류별 OPEX - v2 파라미터 기준 (calculate_opex_annual()과 동기화)
+        batch_time_hr = 24          # 24hr/batch (16h 혐기성 + 8h 호기성)
+        galactose_per_batch = 110   # kg/batch (110 g/L × 1000L)
+        formate_per_batch = 44.0    # kg/batch (5% 과량)
+        batches_report = self.production_hours_per_year / batch_time_hr
+
         print("\n  Raw Materials:")
-        print(f"    D-Galactose: 75 kg/batch × ${self.glucose_cost:.2f}/kg × 208 batches/yr")
-        print(f"      = ${75 * self.glucose_cost * (self.production_hours_per_year / 36):,.0f}/yr")
-        print(f"    Sodium Formate: 29.75 kg/batch × ${self.formate_cost:.2f}/kg × 208 batches/yr")
-        print(f"      = ${29.75 * self.formate_cost * (self.production_hours_per_year / 36):,.0f}/yr")
+        print(f"    D-Galactose: {galactose_per_batch} kg/batch x ${self.glucose_cost:.2f}/kg x {batches_report:.0f} batches/yr")
+        print(f"      = ${galactose_per_batch * self.glucose_cost * batches_report:,.0f}/yr")
+        print(f"    Sodium Formate: {formate_per_batch} kg/batch x ${self.formate_cost:.2f}/kg x {batches_report:.0f} batches/yr")
+        print(f"      = ${formate_per_batch * self.formate_cost * batches_report:,.0f}/yr")
 
         print("\n  Utilities & Operations:")
         for key in ['Electricity', 'Water', 'Labor']:
@@ -469,9 +507,10 @@ class TagatoseEconomicAnalysis:
         print("\n[3] PRODUCTION & REVENUE - Annual")
         print("-" * 80)
         revenue_data = self.calculate_revenue_annual()
-        batches_per_year = self.production_hours_per_year / 36
+        tagatose_per_batch = revenue_data['Annual Tagatose (kg)'] / (self.production_hours_per_year / 24)
+        batches_per_year = self.production_hours_per_year / 24
         print(f"  Production Batches per Year: {batches_per_year:.0f} batches")
-        print(f"  Tagatose per Batch: 75 kg (100% yield, 500L reactor, 36 hr cycle)")
+        print(f"  Tagatose per Batch: {tagatose_per_batch:.0f} kg (100% yield, 1000L reactor, 24 hr cycle)")
         print(f"  Annual Tagatose Production: {revenue_data['Annual Tagatose (kg)']:,.0f} kg")
         print(f"\n  Product Mix & Pricing:")
         print(f"    Crystals (50% of production): {revenue_data['Crystal Yield (kg)']:,.0f} kg @ ${revenue_data['Crystal Price ($/kg)']:.2f}/kg")
