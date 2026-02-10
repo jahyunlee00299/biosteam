@@ -37,8 +37,8 @@ digraph tagatose_revised {
         for [label="Sodium Formate\n44 kg\n$79/batch", color="#87CEEB"];
         eco [label="E.coli Catalyst\n25 kg dry (2x)\n$88/batch (2x)", color="#B0E0E6"];
         acid [label="Acid (pH Buffer)\nFor pH 8.0\nSimple method", color="#90EE90"];
-        nad [label="NAD+ Cofactor\n1.0 mol (2x)\n$31,500/batch (2x)", color="#FFB6C1"];
-        ndp [label="NADP+ Cofactor\n0.1 mol (reduced)\n$3,560/batch", color="#FFB6C1"];
+        nad [label="NAD+ Cofactor\n1.0 mol\n$710/batch", color="#FFB6C1"];
+        ndp [label="NADP+ Cofactor\n0.1 mol\n$500/batch", color="#FFB6C1"];
         air [label="Compressed Air\n500 kg\n21pct O2", color="#FFE4B5"];
     }
 
@@ -59,7 +59,7 @@ digraph tagatose_revised {
     prod [label="FINAL PRODUCT\nD-Tagatose\n104.5 kg/batch\n99.2pct purity", shape=ellipse, color="#90EE90"];
     co2 [label="CO2 Gas\n(Stage 1)", shape=ellipse, color="#D3D3D3"];
 
-    econ [label="REVISED ECONOMICS:\nYPD REMOVED: -140,625/yr\nE.coli 2x: +13,750/yr\nNAD+ 2x: +31,563/yr\nNADP+ reduced: -14,438/yr\nNet savings: ~95K/yr\nNew OPEX: ~430K/yr\nCost/kg: ~12.50\nMarket: 10/kg",
+    econ [label="UPDATED ECONOMICS (Tufvesson 2011):\nNAD+: $710/mol (was $150)\nNADP+: $5,000/mol (was $200)\nCofactor cost: $378,125/yr\nTotal OPEX: $1,074,225/yr\nCost/kg: $31.25\nWith 80pct recovery: $22.45/kg\nMarket: $8-12/kg",
           shape=note, color="#FFFACD"];
 
     gal->s1; for->s1; eco->s1; nad->s1; acid->s1;
@@ -110,8 +110,8 @@ digraph tagatose_cluster_revised {
             style=filled;
             color="#D0E8FF";
 
-            nad [label="NAD+\n1.0 mol (2x)\n$31,500/batch (2x)", color="#FFB6C1"];
-            ndp [label="NADP+\n0.1 mol (reduced)\n$3,560/batch", color="#FFB6C1"];
+            nad [label="NAD+\n1.0 mol\n$710/batch", color="#FFB6C1"];
+            ndp [label="NADP+\n0.1 mol\n$500/batch", color="#FFB6C1"];
         }
 
         air [label="Compressed Air\n500 kg\n21 percent O2", color="#FFE4B5"];
@@ -169,7 +169,7 @@ digraph tagatose_cluster_revised {
         fontsize=10;
 
         econ [label=
-            "YPD REMOVED: -140,625/yr\nE.coli 2x: +27,500/yr\nNAD+ 2x: +63,125/yr\nNADP+ reduced: +7,125/yr\n\nNET CHANGE: -43K/yr\nOld OPEX: 527,038\nNew OPEX: ~430,000\n\nCost/kg: 12.50 (was 15.33)\nMarket: 10.00\nGap: -20 percent (improved from -35 percent)\n\nKey changes:\nYPD elimination simplifies process\nE.coli increase improves efficiency\nCofactor optimization balances cost",
+            "COFACTOR PRICE UPDATE (Tufvesson 2011):\nNAD+: $710/mol (was $150)\nNADP+: $5,000/mol (was $200)\n\nCofactor Annual: $378,125/yr (35.2pct OPEX)\nTotal OPEX: $1,074,225/yr\nCost/kg: $31.25 (no recovery)\nCost/kg: $22.45 (80pct dual recovery)\nMarket: $8-12/kg\n\nCRITICAL: Cofactor regeneration MANDATORY\nNAD+ recovery saves $177,500/yr\nNADP+ recovery saves $125,000/yr",
             shape=note, color="#FFCCDD", fontsize=7];
     }
 
@@ -224,10 +224,11 @@ KEY CHANGES APPLIED:
    pH: Acid buffering method (simplified)
    CO2: Stage 1 (confirmed)
 
-FINAL ECONOMICS (with real prices):
-   OPEX: $745,425/year
-   Cost/kg: $21.68 (without NAD+ recovery)
-   Cost/kg: $20.60 (with 80% NAD+ recovery)
+FINAL ECONOMICS (Tufvesson 2011 verified prices):
+   OPEX: $1,074,225/year
+   Cost/kg: $31.25 (without cofactor recovery)
+   Cost/kg: $26.09 (with 80% NAD+ recovery)
+   Cost/kg: $22.45 (with 80% NAD+ & NADP+ recovery)
    Market price: $8-12/kg
 
 See D_TAGATOSE_PROCESS_FINAL.md for complete details.
