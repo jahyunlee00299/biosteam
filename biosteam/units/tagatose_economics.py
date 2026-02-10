@@ -46,8 +46,8 @@ class TagatoseEconomicAnalysis:
         self.glucose_cost = 2.0    # $/kg (원료, D-Galactose)
         # Sodium Formate: ~$0.25/kg (industrial grade, Sept 2024: $250/MT)
         self.formate_cost = 0.25   # $/kg (원료, Sodium Formate)
-        # E. coli Whole Cell Biocatalyst: ~$25/kg DCW (industrial bulk)
-        self.biocatalyst_cost = 25.0  # $/kg DCW (원료, E. coli 전세포 촉매)
+        # E. coli Whole Cell Biocatalyst: ~$50/kg DCW (revised estimate)
+        self.biocatalyst_cost = 50.0  # $/kg DCW (원료, E. coli 전세포 촉매)
         # Cofactors (NAD+/NADP+) - Tufvesson et al. (2011) Org. Process Res. Dev. bulk pricing
         self.nad_cost = 710.0      # $/mol (NAD+ 코팩터, bulk industrial)
         self.nadp_cost = 5000.0    # $/mol (NADP+ 코팩터, bulk industrial)
