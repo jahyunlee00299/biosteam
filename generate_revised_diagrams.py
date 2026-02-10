@@ -6,7 +6,7 @@ Revised D-Tagatose Process Diagrams (Updated 2026-02-01)
 User Feedback Applied:
 1. NAD+: 0.5 mol → 1.0 mol (1 mM per 1000L)
 2. NADP+: 0.6 mol → 0.1 mol (0.1 mM per 1000L)
-3. E. coli catalyst: 12.5 kg → 25 kg
+3. E. coli catalyst: 12.5 kg → 20 kg dry ($50/kg DCW)
 4. YPD Media: 1000 L → REMOVED
 5. pH: Adjusted with acid (simpler method)
 6. CO2: Stage 1 (confirmed as correct)
@@ -35,7 +35,7 @@ digraph tagatose_revised {
 
         gal [label="D-Galactose\n110 kg\n$308/batch", color="#87CEEB"];
         for [label="Sodium Formate\n44 kg\n$79/batch", color="#87CEEB"];
-        eco [label="E.coli Catalyst\n25 kg dry (2x)\n$88/batch (2x)", color="#B0E0E6"];
+        eco [label="E.coli Catalyst\n20 kg dry\n$1,000/batch", color="#B0E0E6"];
         acid [label="Acid (pH Buffer)\nFor pH 8.0\nSimple method", color="#90EE90"];
         nad [label="NAD+ Cofactor\n1.0 mol\n$710/batch", color="#FFB6C1"];
         ndp [label="NADP+ Cofactor\n0.1 mol\n$500/batch", color="#FFB6C1"];
@@ -59,7 +59,7 @@ digraph tagatose_revised {
     prod [label="FINAL PRODUCT\nD-Tagatose\n104.5 kg/batch\n99.2pct purity", shape=ellipse, color="#90EE90"];
     co2 [label="CO2 Gas\n(Stage 1)", shape=ellipse, color="#D3D3D3"];
 
-    econ [label="UPDATED ECONOMICS (Tufvesson 2011):\nNAD+: $710/mol (was $150)\nNADP+: $5,000/mol (was $200)\nCofactor cost: $378,125/yr\nTotal OPEX: $1,074,225/yr\nCost/kg: $31.25\nWith 80pct recovery: $22.45/kg\nMarket: $8-12/kg",
+    econ [label="UPDATED ECONOMICS (E. coli $50/kg, Tufvesson 2011):\nNAD+: $710/mol | NADP+: $5,000/mol\nE. coli: $50/kg DCW\nTotal OPEX: $1,054,150/yr\nCost/kg: $31.68 (no recovery)\nWith 80pct dual recovery: $22.75/kg\nMarket: $8-12/kg",
           shape=note, color="#FFFACD"];
 
     gal->s1; for->s1; eco->s1; nad->s1; acid->s1;
@@ -101,7 +101,7 @@ digraph tagatose_cluster_revised {
             style=filled;
             color="#D0E8FF";
 
-            eco [label="E.coli Catalyst\n25 kg dry (2x)\n$88/batch (2x)", color="#B0E0E6"];
+            eco [label="E.coli Catalyst\n20 kg dry\n$1,000/batch", color="#B0E0E6"];
             acid [label="Acid Buffer\nFor pH 8.0\nReplaces YPD\nSimpler method", color="#90EE90"];
         }
 
@@ -169,7 +169,7 @@ digraph tagatose_cluster_revised {
         fontsize=10;
 
         econ [label=
-            "COFACTOR PRICE UPDATE (Tufvesson 2011):\nNAD+: $710/mol (was $150)\nNADP+: $5,000/mol (was $200)\n\nCofactor Annual: $378,125/yr (35.2pct OPEX)\nTotal OPEX: $1,074,225/yr\nCost/kg: $31.25 (no recovery)\nCost/kg: $22.45 (80pct dual recovery)\nMarket: $8-12/kg\n\nCRITICAL: Cofactor regeneration MANDATORY\nNAD+ recovery saves $177,500/yr\nNADP+ recovery saves $125,000/yr",
+            "ECONOMICS UPDATE (E. coli $50/kg + Tufvesson 2011):\nNAD+: $710/mol | NADP+: $5,000/mol\nE. coli: $50/kg DCW (30.6pct OPEX)\n\nCofactor Annual: $378,125/yr (35.8pct OPEX)\nE. coli + Cofactor: 67.7pct of OPEX\nTotal OPEX: $1,054,150/yr\nCost/kg: $31.68 (no recovery)\nCost/kg: $22.75 (80pct dual recovery)\nMarket: $8-12/kg\n\nCRITICAL: Cofactor regeneration MANDATORY\nNAD+ recovery saves $177,500/yr\nNADP+ recovery saves $125,000/yr",
             shape=note, color="#FFCCDD", fontsize=7];
     }
 
@@ -219,16 +219,17 @@ PROCESS DIAGRAMS GENERATED:
 KEY CHANGES APPLIED:
    NAD+: 0.5 → 1.0 mol (1 mM per 1000L)
    NADP+: 0.6 → 0.1 mol (0.1 mM per 1000L)
-   E. coli: 12.5 → 25 kg (2x increase)
+   E. coli: 12.5 → 20 kg dry, $25 → $50/kg DCW
    YPD: Removed (process simplification)
    pH: Acid buffering method (simplified)
    CO2: Stage 1 (confirmed)
 
-FINAL ECONOMICS (Tufvesson 2011 verified prices):
-   OPEX: $1,074,225/year
-   Cost/kg: $31.25 (without cofactor recovery)
-   Cost/kg: $26.09 (with 80% NAD+ recovery)
-   Cost/kg: $22.45 (with 80% NAD+ & NADP+ recovery)
+FINAL ECONOMICS (E. coli $50/kg + Tufvesson 2011 verified prices):
+   OPEX: $1,054,150/year
+   Cost/kg: $31.68 (without cofactor recovery)
+   Cost/kg: $24.51 (with 80% NAD+ recovery)
+   Cost/kg: $20.87 (with 80% NAD+ & NADP+ recovery)
+   Breakeven (w/ CAPEX): $31.68/kg
    Market price: $8-12/kg
 
 See D_TAGATOSE_PROCESS_FINAL.md for complete details.
