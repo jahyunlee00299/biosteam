@@ -537,9 +537,10 @@ CLUSTER 3: Purification & Recovery (Optimized - Direct Drying with 98%+ Conversi
 │  └─ Loss: 3-5%
 │
 ├─ 3. Desalination (탈염)
-│  ├─ Method: Ion Exchange Resin (Cation:Anion = 1.5-2:1)
-│  ├─ Final ionic conductivity: ≤10 µS/cm
-│  ├─ Purpose: Remove all ions, leaving >95% Tagatose in solids
+│  ├─ Method: Cation Exchange Resin (H+ form, reusable)
+│  ├─ Regeneration: HCl (simple, cost-effective reuse)
+│  ├─ Purpose: Remove cations (Na+, K+, Ca2+, Mg2+), leaving >95% Tagatose
+│  ├─ Final ionic conductivity: ≤10 µS/cm achievable
 │  └─ Loss: 2%
 │
 ├─ 4. Fluid Bed Drying (건조) [OPTIMIZED PATH]
