@@ -684,7 +684,7 @@ CLUSTER 4: Waste & Utilities
 
 ---
 
-**최종작성**: 2026-02-11 (v2.2 - Direct Drying Strategy 최적화)
+**최종작성**: 2026-02-10 (v2.2 - Direct Drying Strategy 최적화)
 **담당**: Process Engineering + Market Research
 **신뢰도**: ⭐⭐⭐⭐⭐ (Tufvesson 2011 + ChemImpex 2024 검증)
 **상태**: 완료 및 최적화 완료
