@@ -537,8 +537,13 @@ CLUSTER 3: Purification & Recovery (Optimized - Direct Drying with 98%+ Conversi
 │  └─ Loss: 3-5%
 │
 ├─ 3. Desalination (탈염)
-│  ├─ Method: Cation Exchange Resin (H+ form, reusable)
-│  ├─ Regeneration: HCl (simple, cost-effective reuse)
+│  ├─ Method: Cation Exchange Resin (Amberlite™ IRC120, H+ form, reusable)
+│  ├─ Resin Capacity: 1.9 eq/L, Life: ~100 regeneration cycles
+│  ├─ Resin Cost: ~$100/kg (industrial bulk)
+│  ├─ Regeneration: HCl (0.83 L per batch, ~$2.50/batch)
+│  ├─ Replacement Cost: ~$2.37/batch (amortized over 100 cycles)
+│  ├─ Total Cost per Batch: $4.83 (regeneration + replacement)
+│  ├─ Annual Cost (292 batches): $1,409/year (~$0.05/kg product)
 │  ├─ Purpose: Remove cations (Na+, K+, Ca2+, Mg2+), leaving >95% Tagatose
 │  ├─ Final ionic conductivity: ≤10 µS/cm achievable
 │  └─ Loss: 2%
