@@ -85,13 +85,12 @@ class TagatoseEconomicAnalysis:
             reactor_cost = 225000      # 1000L bioreactor + agitation (scaled from 150k)
             separator_cost = 25000     # Centrifuge (larger capacity)
             decolorization_cost = 20000  # Activated carbon unit (larger)
-            crystallization_cost = 50000 # Crystallization unit (larger)
-            evaporator_cost = 40000    # Vacuum evaporator (larger capacity)
+            fluid_bed_dryer_cost = 80000  # Fluid Bed Dryer (FD1) for direct drying
             compressor_cost = 30000    # Oxygen compressor (higher flow for 1000L)
             piping_utilities = 60000   # Piping, utilities, instrumentation (scaled)
 
             total_equipment = (reactor_cost + separator_cost + decolorization_cost +
-                             crystallization_cost + evaporator_cost + compressor_cost + piping_utilities)
+                             fluid_bed_dryer_cost + compressor_cost + piping_utilities)
 
             # Indirect costs (40% of equipment)
             indirect_factor = 0.4
@@ -174,8 +173,8 @@ class TagatoseEconomicAnalysis:
             opex_breakdown['Electricity'] = electricity_cost
 
             # 물 사용: 반응기 충진 (~1000L/batch) + 냉각수 (~500L/batch) + 세척 (~200L/batch)
-            # 총 ~1700 L/batch × 312.5 batches/yr = 531,250 L/yr
-            batches_per_year_util = self.production_hours_per_year / 24
+            # 총 ~1700 L/batch × 250 batches/yr = 425,000 L/yr
+            batches_per_year_util = self.production_hours_per_year / 30  # 30h batch cycle
             water_consumption_L = 1700 * batches_per_year_util
             water_cost = water_consumption_L * self.water_cost
             opex_breakdown['Water'] = water_cost
@@ -190,7 +189,7 @@ class TagatoseEconomicAnalysis:
         nadp_cost = 0.1 * self.nadp_cost  # 0.1 mol/batch (0.1 mM × 1000L)
 
         # 연간 배치 수 (생산 시간 / 배치 시간)
-        batches_per_year = self.production_hours_per_year / 24  # 24시간/배치 (16h 혐기성 + 8h 호기성)
+        batches_per_year = self.production_hours_per_year / 30  # 30h/batch (16h 혐기성 + 8h 호기성 + 6h 다운스트림)
         annual_galactose = galactose_cost * batches_per_year
         annual_formate = formate_cost * batches_per_year
         annual_biocatalyst = biocatalyst_cost * batches_per_year
@@ -202,6 +201,8 @@ class TagatoseEconomicAnalysis:
         opex_breakdown['E. coli Whole Cell (DCW)'] = annual_biocatalyst
         opex_breakdown['NAD+ Cofactor (NO recovery - discarded)'] = annual_nad
         opex_breakdown['NADP+ Cofactor (NO recovery - discarded)'] = annual_nadp
+        opex_breakdown['Desalting (Amberlite IRC120)'] = 1409   # $1,409/yr (regeneration + resin amortization)
+        opex_breakdown['Drying Energy (Fluid Bed Dryer)'] = 350  # $350/yr (electricity for FBD)
 
         # 3. 노동비 (시간제 근로자 2명 FTE)
         # 실제 운영 시간: production_hours_per_year (7500 hr/yr)
@@ -242,33 +243,20 @@ class TagatoseEconomicAnalysis:
             product_concentration = 110.0  # kg/배치 (1000L 기준, 110 g/L × 1000L = 110kg galactose → 110kg tagatose, 100% theoretical yield)
 
         # 연간 배치 수
-        batches_per_year = self.production_hours_per_year / 24  # 24시간/배치
+        batches_per_year = self.production_hours_per_year / 30  # 30h batch cycle
 
         # 연간 타가토스 생산량
         annual_tagatose_kg = product_concentration * batches_per_year
 
-        # 판매 수익
-        # 두 가지 제품 옵션: 결정체 vs 시럽
-        crystal_selling_price = self.tagatose_price * 1.2  # 결정체: 20% 프리미엄
-        syrup_selling_price = self.tagatose_price * 0.95  # 시럽: 5% 할인
-
-        # 50:50 판매 믹스 가정
-        crystal_yield = annual_tagatose_kg * 0.5
-        syrup_yield = annual_tagatose_kg * 0.5
-
-        crystal_revenue = crystal_yield * crystal_selling_price
-        syrup_revenue = syrup_yield * syrup_selling_price
-
-        total_revenue = crystal_revenue + syrup_revenue
+        # 판매 수익 - Direct Drying 경로 (단일 건조 분말 제품)
+        dry_powder_price = self.tagatose_price  # Direct dry powder, no split
+        total_revenue = annual_tagatose_kg * dry_powder_price
 
         return {
             'Annual Tagatose (kg)': annual_tagatose_kg,
-            'Crystal Yield (kg)': crystal_yield,
-            'Syrup Yield (kg)': syrup_yield,
-            'Crystal Price ($/kg)': crystal_selling_price,
-            'Syrup Price ($/kg)': syrup_selling_price,
-            'Crystal Revenue ($)': crystal_revenue,
-            'Syrup Revenue ($)': syrup_revenue,
+            'Dry Powder Yield (kg)': annual_tagatose_kg,
+            'Dry Powder Price ($/kg)': dry_powder_price,
+            'Dry Powder Revenue ($)': total_revenue,
             'Total Annual Revenue ($)': total_revenue,
         }
 
@@ -478,8 +466,8 @@ class TagatoseEconomicAnalysis:
         opex_data = self.calculate_opex_annual()
         total_opex = opex_data.pop('Total Annual OPEX')
 
-        # 분류별 OPEX - v2 파라미터 기준 (calculate_opex_annual()과 동기화)
-        batch_time_hr = 24          # 24hr/batch (16h 혐기성 + 8h 호기성)
+        # 분류별 OPEX - 직접 건조 전략 기준 (calculate_opex_annual()과 동기화)
+        batch_time_hr = 30          # 30hr/batch (16h 혐기성 + 8h 호기성 + 6h 다운스트림)
         galactose_per_batch = 110   # kg/batch (110 g/L × 1000L)
         formate_per_batch = 44.0    # kg/batch (5% 과량)
         batches_report = self.production_hours_per_year / batch_time_hr
@@ -507,16 +495,14 @@ class TagatoseEconomicAnalysis:
         print("\n[3] PRODUCTION & REVENUE - Annual")
         print("-" * 80)
         revenue_data = self.calculate_revenue_annual()
-        tagatose_per_batch = revenue_data['Annual Tagatose (kg)'] / (self.production_hours_per_year / 24)
-        batches_per_year = self.production_hours_per_year / 24
+        tagatose_per_batch = revenue_data['Annual Tagatose (kg)'] / (self.production_hours_per_year / 30)
+        batches_per_year = self.production_hours_per_year / 30
         print(f"  Production Batches per Year: {batches_per_year:.0f} batches")
-        print(f"  Tagatose per Batch: {tagatose_per_batch:.0f} kg (100% yield, 1000L reactor, 24 hr cycle)")
+        print(f"  Tagatose per Batch: {tagatose_per_batch:.0f} kg (98% conversion, 1000L reactor, 30 hr cycle)")
         print(f"  Annual Tagatose Production: {revenue_data['Annual Tagatose (kg)']:,.0f} kg")
-        print(f"\n  Product Mix & Pricing:")
-        print(f"    Crystals (50% of production): {revenue_data['Crystal Yield (kg)']:,.0f} kg @ ${revenue_data['Crystal Price ($/kg)']:.2f}/kg")
-        print(f"      Revenue: ${revenue_data['Crystal Revenue ($)']:,.0f}")
-        print(f"    Syrup (50% of production): {revenue_data['Syrup Yield (kg)']:,.0f} kg @ ${revenue_data['Syrup Price ($/kg)']:.2f}/kg")
-        print(f"      Revenue: ${revenue_data['Syrup Revenue ($)']:,.0f}")
+        print(f"\n  Product & Pricing:")
+        print(f"    Direct Dry Powder: {revenue_data['Dry Powder Yield (kg)']:,.0f} kg @ ${revenue_data['Dry Powder Price ($/kg)']:.2f}/kg")
+        print(f"      Revenue: ${revenue_data['Dry Powder Revenue ($)']:,.0f}")
         print(f"\n  TOTAL ANNUAL REVENUE: ${revenue_data['Total Annual Revenue ($)']:,.0f}")
 
         # 5. Break-Even Analysis

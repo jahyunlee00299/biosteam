@@ -43,7 +43,7 @@ digraph tagatose_revised {
     }
 
     subgraph cluster_r1 {
-        label="Bioreactor (1000L, 24hr, 25C)";
+        label="Bioreactor (1000L, 30hr, 25C)";
         style=filled;
         color=lightyellow;
 
@@ -53,13 +53,13 @@ digraph tagatose_revised {
 
     cent [label="Centrifuge (S1)\n98pct recovery", color="#FFFFE0"];
     decolor [label="Decolorization (D1)\nActivated Carbon", color="#FFFFE0"];
-    desalt [label="Desalination (DS1)\nIon Exchange", color="#FFFFE0"];
-    conc [label="Concentration (T1)\nVacuum Evaporation", color="#FFFFE0"];
+    desalt [label="Desalination (DS1)\nIon Exchange (Amberlite IRC120)", color="#FFFFE0"];
+    dry [label="Fluid Bed Dryer (FD1)\nDirect Drying\n98pct conversion path", color="#FFFFE0"];
 
-    prod [label="FINAL PRODUCT\nD-Tagatose\n104.5 kg/batch\n99.2pct purity", shape=ellipse, color="#90EE90"];
+    prod [label="FINAL PRODUCT\nD-Tagatose\n~110 kg/batch\n>95pct purity\nDirect Dry Powder", shape=ellipse, color="#90EE90"];
     co2 [label="CO2 Gas\n(Stage 1)", shape=ellipse, color="#D3D3D3"];
 
-    econ [label="UPDATED ECONOMICS (E. coli $50/kg, Tufvesson 2011):\nNAD+: $710/mol | NADP+: $5,000/mol\nE. coli: $50/kg DCW\nTotal OPEX: $1,054,150/yr\nCost/kg: $31.68 (no recovery)\nWith 80pct dual recovery: $22.75/kg\nMarket: $8-12/kg",
+    econ [label="DIRECT DRYING ECONOMICS (98% conversion, 30h batch):\nNAD+: $710/mol | NADP+: $5,000/mol | E. coli: $50/kg DCW\nCAPEX: $520K (removed evaporator & crystallizer, added FBD)\nOPEX: Desalting $1,409/yr + Drying Energy $350/yr\nAnnual Production: ~27,500 kg (250 batches/yr)\nBreakeven: ~$32/kg | Market: $8-12/kg",
           shape=note, color="#FFFACD"];
 
     gal->s1; for->s1; eco->s1; nad->s1; acid->s1;
@@ -69,8 +69,8 @@ digraph tagatose_revised {
     s2->cent [label="110kg product"];
     cent->decolor [label="107.8kg"];
     decolor->desalt [label="105.6kg"];
-    desalt->conc [label="105kg"];
-    conc->prod [label="104.5kg"];
+    desalt->dry [label="105kg"];
+    dry->prod [label="~104.5kg"];
 }
 """
 
@@ -118,7 +118,7 @@ digraph tagatose_cluster_revised {
     }
 
     subgraph cluster_reaction {
-        label="STAGE 2: BIOREACTION (1000L, 24hr, 25C)";
+        label="STAGE 2: BIOREACTION (1000L, 30hr, 25C)";
         style=filled;
         color="#FFFACD";
         fontsize=12;
@@ -141,15 +141,15 @@ digraph tagatose_cluster_revised {
     }
 
     subgraph cluster_purification {
-        label="STAGE 3: PURIFICATION";
+        label="STAGE 3: PURIFICATION & DRYING";
         style=filled;
         color="#F0F8E0";
         fontsize=12;
 
         cent [label="Centrifuge (S1)\n98 percent recovery", color="#FFFFE0"];
         decolor [label="Decolorization (D1)\nActivated Carbon\n95 percent removal", color="#FFFFE0"];
-        desalt [label="Desalination (DS1)\nIon Exchange\n90 percent Na+ removal", color="#FFFFE0"];
-        conc [label="Concentration (T1)\nVacuum Evaporation\n104.5 kg yield", color="#FFFFE0"];
+        desalt [label="Desalination (DS1)\nIon Exchange (Amberlite)\n90 percent Na+ removal", color="#FFFFE0"];
+        dry [label="Fluid Bed Dryer (FD1)\nDirect Drying\nYield: ~104.5 kg/batch", color="#FFFFE0"];
     }
 
     subgraph cluster_output {
@@ -158,25 +158,25 @@ digraph tagatose_cluster_revised {
         color="#F0E0F0";
         fontsize=12;
 
-        prod [label="Final Product\nD-Tagatose\n104.5 kg/batch\n99.2 percent purity", shape=ellipse, color="#90EE90"];
+        prod [label="Final Product\nD-Tagatose\n~110 kg/batch\n>95 percent purity\nDirect Dry Powder", shape=ellipse, color="#90EE90"];
         co2 [label="CO2 Gas\n61 mol (Stage 1)", shape=ellipse, color="#D3D3D3"];
     }
 
     subgraph cluster_econ {
-        label="ECONOMIC IMPACT (REVISED)";
+        label="ECONOMIC IMPACT (DIRECT DRYING)";
         style=filled;
         color="#FFE4F0";
         fontsize=10;
 
         econ [label=
-            "ECONOMICS UPDATE (E. coli $50/kg + Tufvesson 2011):\nNAD+: $710/mol | NADP+: $5,000/mol\nE. coli: $50/kg DCW (30.6pct OPEX)\n\nCofactor Annual: $378,125/yr (35.8pct OPEX)\nE. coli + Cofactor: 67.7pct of OPEX\nTotal OPEX: $1,054,150/yr\nCost/kg: $31.68 (no recovery)\nCost/kg: $22.75 (80pct dual recovery)\nMarket: $8-12/kg\n\nCRITICAL: Cofactor regeneration MANDATORY\nNAD+ recovery saves $177,500/yr\nNADP+ recovery saves $125,000/yr",
+            "DIRECT DRYING ECONOMICS (98% conversion, 30h batch):\nNAD+: $710/mol | NADP+: $5,000/mol | E. coli: $50/kg DCW\n\nCAPEX Optimization:\n  Removed: Crystallization ($50K) + Evaporator ($40K)\n  Added: Fluid Bed Dryer ($80K)\n  Net CAPEX Change: -$10K -> ~$520K total\n\nOPEX Changes:\n  Desalting (Amberlite IRC120): +$1,409/yr\n  Drying Energy (FBD): +$350/yr\n  Annual Production: 27,500 kg (250 batches/yr)\n\nBreakeven: ~$32/kg | Market: $8-12/kg",
             shape=note, color="#FFCCDD", fontsize=7];
     }
 
     gal->s1; for->s1; eco->s1; nad->s1; acid->s1; ndp->s2; air->s2;
     s1->s2 [label="Galactitol"];
     s1->co2; s2->cent;
-    cent->decolor; decolor->desalt; desalt->conc; conc->prod;
+    cent->decolor; decolor->desalt; desalt->dry; dry->prod;
 }
 """
 

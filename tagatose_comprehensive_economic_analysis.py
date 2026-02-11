@@ -175,19 +175,31 @@ print("="*80)
 opex_detail = econ.calculate_opex_annual()
 total_opex = opex_detail['Total Annual OPEX']
 
-print(f"\nRaw Materials:")
-# v2 parameters: 110 kg Galactose per batch, 24 hr cycle, 312.5 batches/year
-batches_per_year_v2 = econ.production_hours_per_year / 24  # 24 hr batch time in v2
-gal_per_batch_v2 = 110  # kg, v2 optimized (was 75 in v0/v1)
+print(f"\nRaw Materials & Cofactors:")
+# Direct drying parameters: 110 kg Galactose per batch, 30 hr cycle, 250 batches/year
+batches_per_year_v2 = econ.production_hours_per_year / 30  # 30 hr batch time
+gal_per_batch_v2 = 110  # kg, optimized (was 75 in v0/v1)
 formate_per_batch_v2 = 44  # kg, v2 optimized (5% molar excess, was 29.75 in v0/v1)
 gal_cost = gal_per_batch_v2 * econ.glucose_cost * batches_per_year_v2
 formate_cost = formate_per_batch_v2 * econ.formate_cost * batches_per_year_v2
+nad_cost_annual = opex_detail.get('NAD+ Cofactor (NO recovery - discarded)', 0)
+nadp_cost_annual = opex_detail.get('NADP+ Cofactor (NO recovery - discarded)', 0)
+eco_cost_annual = opex_detail.get('E. coli Whole Cell (DCW)', 0)
 print(f"  D-Galactose:         ${gal_cost:>12,.0f}  ({gal_cost/total_opex*100:.1f}%)")
 print(f"  Sodium Formate:      ${formate_cost:>12,.0f}  ({formate_cost/total_opex*100:.1f}%)")
+print(f"  E. coli (20 kg/batch):  ${eco_cost_annual:>12,.0f}  ({eco_cost_annual/total_opex*100:.1f}%)")
+print(f"  NAD+ Cofactor:       ${nad_cost_annual:>12,.0f}  ({nad_cost_annual/total_opex*100:.1f}%)")
+print(f"  NADP+ Cofactor:      ${nadp_cost_annual:>12,.0f}  ({nadp_cost_annual/total_opex*100:.1f}%)")
 
 print(f"\nUtilities:")
 print(f"  Electricity:         ${opex_detail['Electricity']:>12,.0f}  ({opex_detail['Electricity']/total_opex*100:.1f}%)")
 print(f"  Water:               ${opex_detail['Water']:>12,.0f}  ({opex_detail['Water']/total_opex*100:.1f}%)")
+
+print(f"\nDownstream Processing (Direct Drying):")
+desalt_cost = opex_detail.get('Desalting (Amberlite IRC120)', 0)
+dry_cost = opex_detail.get('Drying Energy (Fluid Bed Dryer)', 0)
+print(f"  Desalting (Amberlite): ${desalt_cost:>12,.0f}  ({desalt_cost/total_opex*100:.1f}%)")
+print(f"  Drying Energy (FBD):   ${dry_cost:>12,.0f}  ({dry_cost/total_opex*100:.1f}%)")
 
 print(f"\nLabor & Operations:")
 print(f"  Labor:               ${opex_detail['Labor']:>12,.0f}  ({opex_detail['Labor']/total_opex*100:.1f}%)")
@@ -206,15 +218,15 @@ print("\n" + "="*80)
 print("[KEY PERFORMANCE INDICATORS - KPI]")
 print("="*80)
 
-batches_per_year = econ.production_hours_per_year / 24  # v2: 24 hr batch time
-annual_tagatose = batches_per_year * 110  # v2: 110 kg per batch (1000L × 110 g/L)
+batches_per_year = econ.production_hours_per_year / 30  # 30 hr batch time
+annual_tagatose = batches_per_year * 110  # 110 kg per batch (1000L × 110 g/L) at 98% conversion
 
-print(f"\nProduction Metrics (v2 Optimized):")
+print(f"\nProduction Metrics (Direct Drying Strategy):")
 print(f"  Operating Hours/Year:      {econ.production_hours_per_year:.0f} hrs")
-print(f"  Batch Duration:            24 hrs (16h anaerobic + 8h aerobic, integrated stages)")
+print(f"  Batch Duration:            30 hrs (16h anaerobic + 8h aerobic + 6h downstream)")
 print(f"  Batches per Year:          {batches_per_year:.0f}")
-print(f"  Tagatose per Batch:        110 kg (1000L reactor × 110 g/L)")
-print(f"  Annual Production:         {annual_tagatose:,.0f} kg (v2: +100% vs v0)")
+print(f"  Tagatose per Batch:        110 kg (1000L reactor × 110 g/L, 98% conversion)")
+print(f"  Annual Production:         {annual_tagatose:,.0f} kg")
 print(f"  Capacity Utilization:      {econ.plant_capacity_factor*100:.0f}%")
 
 print(f"\nFinancial Metrics:")
