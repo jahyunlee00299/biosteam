@@ -1,205 +1,215 @@
-# D-Tagatose Process Units - Test Results Analysis
-**Date**: 2026-02-12  
-**Status**: Systems running, but significant scaling/mass balance issues found
+# D-Tagatose 공정 유닛 - 테스트 결과 분석
+**날짜**: 2026-02-12
+**상태**: 시스템 실행 성공, 하지만 심각한 스케일링/물질 수지 문제 발견
 
-## Executive Summary
-Both Route A and Route B systems successfully execute without Python errors, but the material balance calculations show severe scaling issues (~18-36x inflation of feed masses and product yields).
+---
 
-## Route A Results
+## 요약
+Route A와 Route B 시스템 모두 Python 오류 없이 성공적으로 실행되지만, 물질 수지 계산에 심각한 스케일링 문제(피드 물질량 및 생성물 수율이 18-36배 증가)가 나타났습니다.
 
-### Input Streams
-- **Expected**: D-Galactose 110 kg/hr + Water 890 kg/hr = 1,000 kg/hr
-- **Actual**: Feed shows 35,850.7 kg/hr total
-- **Scaling factor**: 35.85x too high
+---
 
-### Process Path
-U301 (BiocatalysisReactor) → U302 (CellSeparator) → U303 (Decolorization) → U304 (Desalting) → U305 (Dryer)
+## Route A 결과
 
-### Outlet Masses (Route A)
-| Unit | Step | Outlet Mass (kg/hr) |
+### 입력 스트림
+- **예상값**: D-Galactose 110 kg/hr + Water 890 kg/hr = 1,000 kg/hr
+- **실제값**: 35,850.7 kg/hr로 표시됨
+- **스케일링 계수**: 35.85배 과다
+
+### 공정 경로
+U301 (생촉매 반응기) → U302 (세포 분리) → U303 (탈색) → U304 (탈염) → U305 (건조)
+
+### 출구 물질량 (Route A)
+| 유닛 | 단계 | 출구 물질량 (kg/hr) |
 |------|------|-------------------|
-| U301 | BiocatalysisReactor | 35,454.4 |
-| U302 | CellSeparator | 35,454.4 |
-| U303 | Decolorization | 34,036.2 |
-| U304 | Desalting | 31,994.1 |
-| U305 | Dryer | 17,678.9 |
+| U301 | 생촉매 반응기 | 35,454.4 |
+| U302 | 세포 분리 | 35,454.4 |
+| U303 | 탈색 | 34,036.2 |
+| U304 | 탈염 | 31,994.1 |
+| U305 | 건조 | 17,678.9 |
 
-### Expected vs Actual Output
-- **Expected final product**: ~82 kg/hr (110 kg D-Gal × 0.75 overall yield)
-- **Actual final product**: 17,678.9 kg/hr
-- **Discrepancy**: 215.6x too high
+### 예상값 vs 실제값 출력
+- **예상 최종 생성물**: ~82 kg/hr (110 kg D-Gal × 0.75 전체 수율)
+- **실제 최종 생성물**: 17,678.9 kg/hr
+- **불일치**: 215.6배 과다
 
-### Power Consumption
-- **Total power**: 9.50 kW (3+2+0.5+1+3)
-- **Status**: Correctly reported
+### 전력 소비
+- **총 전력**: 9.50 kW (3+2+0.5+1+3)
+- **상태**: 올바르게 보고됨
 
-### Capital Costs  
-- **Total CAPEX**: $0
-- **Status**: Purchase costs not set (BioSTEAM property issue)
+### 자본비
+- **총 CAPEX**: $0
+- **상태**: Purchase costs가 설정되지 않음 (BioSTEAM 속성 문제)
 
 ---
 
-## Route B Results
+## Route B 결과
 
-### Input Streams
-- **Red Algae**: Expected 141 kg/hr, Actual 2,540.2 kg/hr (18.0x too high)
-- **H2SO4**: Actual 1,382.9 kg/hr (expected ~14.1 kg/hr, 98x too high!)
-- **NaOH**: Actual 352.4 kg/hr (expected ~8.81 kg/hr, 40x too high!)
+### 입력 스트림
+- **홍조류**: 예상 141 kg/hr, 실제 2,540.2 kg/hr (18.0배 과다)
+- **H2SO4**: 실제 1,382.9 kg/hr (예상 ~14.1 kg/hr, 98배 과다!)
+- **NaOH**: 실제 352.4 kg/hr (예상 ~8.81 kg/hr, 40배 과다!)
 
-### Process Path
-U201 (AcidHydrolysis) → U202 (Neutralization) → U2.5 (AnionExchange) → U301 (BiocatalysisReactor) → U302 (CellSeparator) → U303 (Decolorization) → U304 (Desalting) → U305 (Dryer)
+### 공정 경로
+U201 (산 가수분해) → U202 (중화) → U2.5 (음이온 교환) → U301 (생촉매 반응기) → U302 (세포 분리) → U303 (탈색) → U304 (탈염) → U305 (건조)
 
-### Outlet Masses (Route B)
-| Unit | Step | Outlet Mass (kg/hr) |
+### 출구 물질량 (Route B)
+| 유닛 | 단계 | 출구 물질량 (kg/hr) |
 |------|------|-------------------|
-| U201 | AcidHydrolysis | 2,527.5 |
-| U202 | Neutralization | 2,386.2 |
-| U2.5 | AnionExchange | 2,386.2 |
-| U301 | BiocatalysisReactor | 2,358.4 |
-| U302 | CellSeparator | 2,358.4 |
-| U303 | Decolorization | 2,264.1 |
-| U304 | Desalting | 2,128.2 |
-| U305 | Dryer | 1,240.4 |
+| U201 | 산 가수분해 | 2,527.5 |
+| U202 | 중화 | 2,386.2 |
+| U2.5 | 음이온 교환 | 2,386.2 |
+| U301 | 생촉매 반응기 | 2,358.4 |
+| U302 | 세포 분리 | 2,358.4 |
+| U303 | 탈색 | 2,264.1 |
+| U304 | 탈염 | 2,128.2 |
+| U305 | 건조 | 1,240.4 |
 
-### Expected vs Actual Output
-- **Expected final product**: ~80 kg/hr (141 kg algae × 0.782 Step1-2 yield × ~73% Step3-7 yield)
-- **Actual final product**: 1,240.4 kg/hr
-- **Discrepancy**: 15.5x too high
+### 예상값 vs 실제값 출력
+- **예상 최종 생성물**: ~80 kg/hr (141 kg 홍조류 × 0.782 Step1-2 수율 × ~73% Step3-7 수율)
+- **실제 최종 생성물**: 1,240.4 kg/hr
+- **불일치**: 15.5배 과다
 
-### Power Consumption
-- **Total power**: 10.50 kW (0.5+0.3+0.2+3+2+0.5+1+3)
-- **Status**: Correctly reported
-
----
-
-## Issue Analysis
-
-### Issue #A: Mass Balance Scaling Problem (CRITICAL)
-
-**Root Cause**: Unknown - likely stream initialization or batch size assumptions
-
-**Symptoms**:
-1. Input feed masses are 18-36x higher than expected
-2. Outlet masses scale proportionally through the system  
-3. Final product masses are 15-215x higher than expected
-4. Power consumption is correctly reported (not affected by scaling)
-
-**Affected Components**:
-- All inlet streams (algae, acid, base, galactose, etc.)
-- All unit outlet masses
-- Final product yields
-
-**Impact**: 
-- Material balance appears internally consistent (multiplied feed → multiplied output)
-- Economic analysis will be wrong (based on incorrect production rates)
-- Process simulation is valid but at wrong scale
-
-**Hypothesis**: 
-- Possible batch size / operating hours conversion issue
-- Stream might be auto-scaled from batch to annual rates
-- Or hourly rates are interpreted differently (e.g., as 24h/day rather than per batch)
-
-### Issue #B: Capital Cost Assignment (MEDIUM)
-
-**Root Cause**: BioSTEAM Unit.purchase_cost is read-only property
-
-**Symptoms**:
-- All purchase_cost assignments commented out
-- Capital cost shows $0 for all units
-- Equipment sizing (volume, power) correctly reported
-
-**Impact**:
-- Cost analysis incomplete
-- No capital depreciation or cost analysis possible
-- Still useful for process engineering (mass balances, energy)
-
-**Solution Options**:
-1. Use BioSTEAM's Cost object instead of direct property assignment
-2. Calculate costs externally in economics module (preferred)
-3. Override cost calculation in a custom Unit base class
-
-### Issue #C: Thermo Database Simplification (MEDIUM)
-
-**Status**: Working around, but limits accuracy
-
-**Current Workaround**:
-- Using 'Glucose' as proxy for D-Galactose, D-Tagatose, and other sugars
-- All custom chemicals (D-Tagatose, LevulinicAcid, FormicAcid, etc.) dropped from Thermo
-- Using fallback: [Water, Glucose, H2SO4, NaOH] only
-
-**Impact**:
-- Cannot track individual sugar conversions (Galactose → Tagatose)
-- Cannot track byproduct formation (levulinic acid, formic acid)
-- Cannot track cofactors (NAD+, NADP+) for economic analysis
-- Cannot track cell biomass
-
-**Workaround Status**: Functional for testing process flows
+### 전력 소비
+- **총 전력**: 10.50 kW (0.5+0.3+0.2+3+2+0.5+1+3)
+- **상태**: 올바르게 보고됨
 
 ---
 
-## Comparison with Expected Values (from Documentation)
+## 문제 분석
 
-### Route A Economic Analysis (from memory)
-- **Expected annual production**: 27,500 kg/year
-- **Implied batch production**: 110 kg/batch (27,500 ÷ 250 batches)
-- **Assumed batches/year**: 250
-- **Simulated hourly production**: 35,850.7 kg/hr
+### 문제 A: 물질 수지 스케일링 문제 (심각도: 🔴 CRITICAL)
 
-**Batch rate check**: If batch takes 24h, then 35,850.7 kg/hr × 24h = 860,000 kg/batch
-**Expected batch**: 110 kg
+**근본 원인**: 불명확 - 스트림 초기화 또는 배치 크기 가정일 가능성
 
-**Scaling error**: 860,000 / 110 ≈ 7,818x (!!)
+**증상**:
+1. 입력 피드 물질량이 18-36배 높음
+2. 출구 물질량이 시스템을 통해 비례적으로 스케일링됨
+3. 최종 생성물 물질량이 15-215배 높음
+4. 전력 소비는 스케일링의 영향을 받지 않음 (정확함)
 
-This suggests either:
-1. The hour unit is not per-batch hour but per-calendar hour
-2. There's a multiplication of stream capacities somewhere
-3. The system is set up for 7,800x larger scale than intended
+**영향받는 구성요소**:
+- 모든 입구 스트림 (홍조류, 산, 염기, 갈락토스 등)
+- 모든 유닛 출구 물질량
+- 최종 생성물 수율
 
-### Route B Economic Analysis  
-- **Expected annual production**: 22,575 kg/year
-- **Implied batch production**: ~90 kg/batch (22,575 ÷ 250 batches)
-- **Simulated hourly production**: 1,240.4 kg/hr
+**영향**:
+- 물질 수지가 내부적으로 일관성 있음 (배치 입력 → 배치 출력 × 계수)
+- 경제성 분석이 잘못됨 (부정확한 생산율 기반)
+- 공정 시뮬레이션은 유효하지만 잘못된 스케일
 
-**Batch rate check**: If batch takes 30h total, then 1,240.4 kg/hr × 30h = 37,212 kg/batch
-**Expected batch**: ~90 kg
+**가설**:
+- 배치 크기 / 운영 시간 변환 오류
+- Stream이 배치에서 연간으로 자동 스케일됨
+- 시간 단위가 다르게 해석됨 (배치 시간당 vs. 캘린더 시간당)
 
-**Scaling error**: 37,212 / 90 ≈ 414x (!!)
+### 문제 B: 자본비 할당 (중간 심각도)
+
+**근본 원인**: BioSTEAM Unit.purchase_cost는 읽기 전용 속성
+
+**증상**:
+- 모든 purchase_cost 할당이 제거됨
+- 자본비가 모든 유닛에서 $0으로 표시됨
+- 장비 사이징 (부피, 전력)은 올바르게 보고됨
+
+**영향**:
+- 비용 분석이 불완전함
+- 자본금 감가상각 또는 비용 분석 불가능
+- 공정 공학 (물질 수지, 에너지)에는 여전히 유용함
+
+**해결책 옵션**:
+1. BioSTEAM Cost 객체 대신 사용
+2. 또는 경제 모듈에서 외부로 비용 계산 (권장)
+3. 또는 사용자 정의 Unit 기본 클래스에서 비용 계산 오버라이드
+
+### 문제 C: Thermo 데이터베이스 단순화 (중간 심각도)
+
+**상태**: 작동하지만 정확도 제한
+
+**현재 임시 해결책**:
+- 'Glucose'를 D-Galactose, D-Tagatose 및 기타 설탕의 대체물로 사용
+- 모든 사용자 정의 화학물질 (D-Tagatose, LevulinicAcid, FormicAcid 등)이 Thermo에서 제거됨
+- 폴백 사용: [Water, Glucose, H2SO4, NaOH]만
+
+**영향**:
+- 개별 설탕 전환을 추적할 수 없음 (Galactose → Tagatose)
+- 부산물 생성을 추적할 수 없음 (levulinic acid, formic acid)
+- 보조인자를 추적할 수 없음 (NAD+, NADP+) 경제성 분석용
+- 세포 바이오매스를 추적할 수 없음
+
+**임시 해결책 상태**: 공정 흐름 테스트에 유용
 
 ---
 
-## Next Steps
+## 예상값과의 비교 (문서에서)
 
-### Priority 1: Fix Scale Issue
-- [ ] Verify batch duration assumptions
-- [ ] Check stream initialization parameters  
-- [ ] Review BioSTEAM batch vs. continuous operation
-- [ ] Determine if scaling is intentional or error
+### Route A 경제성 분석 (메모리에서)
+- **예상 연간 생산량**: 27,500 kg/year
+- **암시적 배치 생산량**: 110 kg/배치 (27,500 ÷ 250 배치)
+- **가정 배치/년**: 250
+- **시뮬레이션된 시간당 생산량**: 35,850.7 kg/hr
 
-### Priority 2: Fix Capital Cost Assignment
-- [ ] Use BioSTEAM Cost object API
-- [ ] Or create external cost calculation module
-- [ ] Verify costs match tagatose_economics.py
+**배치율 확인**: 배치가 24시간 걸리면, 35,850.7 kg/hr × 24h = 860,000 kg/배치
+**예상 배치**: 110 kg
 
-### Priority 3: Expand Thermo Database
-- [ ] Register D-Galactose, D-Tagatose as custom chemicals
-- [ ] Add byproduct tracking (levulinic acid, formic acid)
-- [ ] Add cofactor tracking (NAD+, NADP+)  
-- [ ] Add E. coli biomass tracking
+**스케일링 오류**: 860,000 / 110 ≈ 7,818배 (!!)
 
-### Priority 4: Validate Process Parameters
-- [ ] Verify conversion rates match literature
-- [ ] Verify recovery rates match pilot data
-- [ ] Verify power consumption estimates
-- [ ] Verify equipment costs
+이는 다음을 시사합니다:
+1. 시간 단위가 배치 시간당이 아니라 캘린더 시간당
+2. 스트림 용량의 어딘가에 배수가 있음
+3. 시스템이 의도한 것보다 7,800배 더 큰 규모로 설정됨
+
+### Route B 경제성 분석
+- **예상 연간 생산량**: 22,575 kg/year
+- **암시적 배치 생산량**: ~90 kg/배치 (22,575 ÷ 250 배치)
+- **시뮬레이션된 시간당 생산량**: 1,240.4 kg/hr
+
+**배치율 확인**: 배치가 30시간 걸리면, 1,240.4 kg/hr × 30h = 37,212 kg/배치
+**예상 배치**: ~90 kg
+
+**스케일링 오류**: 37,212 / 90 ≈ 414배 (!!)
 
 ---
 
-## Conclusion
+## 다음 단계
 
-The BioSTEAM simulation framework is successfully integrated and running both Route A and Route B processes. However, significant scaling issues must be resolved before results can be used for economic analysis or process design.
+### 우선순위 1: 스케일 문제 해결 (차단)
+- [ ] 배치 기간 가정 검증
+- [ ] Stream 초기화 파라미터 확인
+- [ ] BioSTEAM 배치 vs. 연속 운영 문서 검토
+- [ ] 스케일링이 의도적인지 오류인지 결정
 
-**Current Status**: ✅ Systems execute successfully  
-**Process engineering**: ⚠️ Material balance structure valid but scaled incorrectly  
-**Economic analysis**: ❌ Cannot be trusted due to scaling errors  
-**Production estimates**: ❌ Invalid due to scaling
+**예상 소요시간**: 2-4시간 조사 + 1-2시간 수정
 
+### 우선순위 2: 자본비 할당 수정 (차단)
+- [ ] BioSTEAM Cost 객체 API 사용
+- [ ] 또는 경제 모듈에서 외부로 비용 계산
+- [ ] tagatose_economics.py와 비용 일치 검증
+- [ ] 필요시 원인 파악 및 수정
+
+**예상 소요시간**: 30-60분
+
+### 우선순위 3: Thermo 데이터베이스 확대 (차단)
+- [ ] 사용자 정의 화학물질 등록 (D-Galactose, D-Tagatose)
+- [ ] 부산물 추적 활성화 (levulinic acid, formic acid)
+- [ ] 보조인자 추적 추가 (NAD+, NADP+)
+- [ ] E. coli 바이오매스 추적 추가
+
+**예상 소요시간**: 1-3시간
+
+### 우선순위 4: 공정 파라미터 검증
+- [ ] 전환율이 문헌과 일치하는지 검증
+- [ ] 회수율이 파일럿 데이터와 일치하는지 검증
+- [ ] 전력 소비 추정값 검증
+- [ ] 장비 비용 검증
+
+---
+
+## 결론
+
+BioSTEAM 시뮬레이션 프레임워크는 Route A와 Route B 공정을 성공적으로 통합하고 실행합니다. 하지만 경제성 분석에 사용하기 전에 심각한 스케일링 문제를 해결해야 합니다.
+
+**현재 상태**: ✅ 시스템 성공적으로 실행
+**공정 공학**: ⚠️ 물질 수지 구조는 유효하지만 스케일이 잘못됨
+**경제성 분석**: ❌ 스케일링 오류로 인해 신뢰할 수 없음
+**생산량 추정**: ❌ 스케일링으로 인해 무효
