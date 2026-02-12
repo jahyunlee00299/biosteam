@@ -48,19 +48,17 @@ from biosteam.units.tagatose_process_units import (
 # ============================================================================
 
 # Step 1 Input: Red algae biomass
-# TODO: 사용자가 확인/수정할 사항
-#   - 홍조류 141 kg/hr이 맞는가? (110 kg D-Gal ÷ 0.782 yield)
+# NOTE: Represented as Water stream (proxy for algae solids) due to Thermo DB
 feed_algae = Stream(
     'AlgaeBiomass',
-    # Algae=141.0,  # Thermo DB에 추가되면 활성화
-    Water=0.0,       # 보충
+    Water=141.0,     # kg/hr proxy for algae biomass (141 kg/hr in process)
     price=0.75,      # $/kg
 )
 
 # Step 1 Input: Sulfuric acid
 feed_acid = Stream(
     'H2SO4_for_hydrolysis',
-    H2SO4=14.1,      # kg/hr (141 kg 홍조류 × 0.1)
+    H2SO4=14.1,      # kg/hr (141 kg algae x 0.1)
     price=0.05,      # $/kg
 )
 
@@ -72,16 +70,18 @@ feed_base = Stream(
 )
 
 # Step 3 Input: E. coli cells
+# NOTE: Not tracked in Thermo DB
 feed_cells = Stream(
     'E.coli_cells',
-    # E.coli=20.0,  # Thermo DB에 추가되면 활성화
+    # E.coli not in Thermo DB
     price=50.0,      # $/kg DCW
 )
 
 # Step 3 Input: Sodium formate
+# NOTE: Not tracked in Thermo DB
 feed_formate = Stream(
     'SodiumFormate',
-    # SodiumFormate=44.0,  # Thermo DB에 추가되면 활성화
+    # SodiumFormate not in Thermo DB
     price=0.25,      # $/kg
 )
 
@@ -164,7 +164,7 @@ product.price = 10.0  # $/kg
 
 route_b_system = System(
     ID='Route_B_System',
-    units=(U201, U202, U2_5, U301, U302, U303, U304, U305),
+    path=(U201, U202, U2_5, U301, U302, U303, U304, U305),
 )
 
 # ============================================================================

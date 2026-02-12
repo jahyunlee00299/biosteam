@@ -150,37 +150,77 @@ feed_base = 8.81 kg/hr            # NaOH
 
 ## Issue #4: Unit 물질 수지 검증 (실제 테스트 후)
 
-**상태**: 🟠 보류중 (구현 후)
-**담당**: 개발자 + 사용자 (검증)
-**파일**: `tests/test_tagatose_units.py`
+**상태**: 🔴 CRITICAL - 심각한 스케일링 문제 발견!
+**담당**: 개발자 + 사용자
+**파일**: `tagatose_route_a_system.py`, `tagatose_route_b_system.py`
 
-### 문제
-각 Unit의 물질 수지가 정확한지 실제 시뮬레이션으로 확인
+### 테스트 결과 (2026-02-12)
+✅ 시스템 성공적으로 실행됨
+❌ 물질 수지 스케일링 오류 발견 (18-36배 과다)
+⚠️ 자본비 할당 실패 (BioSTEAM 속성 이슈)
 
-### 검증 항목
-```python
-# 각 Unit에서 검증할 항목:
+### 발견된 문제들
 
-BiocatalysisReactor:
-- [ ] 입력 110 kg D-Galactose → 출력 108 kg D-Tagatose (98%)
-- [ ] 미반응 2 kg D-Galactose 남음
-- [ ] 질량 보존: 입력 = 출력 (±1%)
+#### Problem #4A: 심각한 스케일링 오류 (CRITICAL)
 
-CellSeparator:
-- [ ] E.coli 제거율 98% 확인
-- [ ] 생성물 손실 2% 확인
+**Route A 테스트 결과**:
+- 예상 입력: 110 kg D-Galactose + 890 kg Water = 1,000 kg/hr
+- 실제 입력: 35,850.7 kg/hr (**35.85배 과다**)
+- 예상 생성물: ~82 kg/hr (110×0.75 수율)
+- 실제 생성물: 17,678.9 kg/hr (**215배 과다**)
 
-Decolorization:
-- [ ] 생성물 회수율 96% 확인
+**Route B 테스트 결과**:
+- 예상 입력: 141 kg 홍조류
+- 실제 입력: 2,540.2 kg/hr (**18배 과다**)
+- 예상 생성물: ~80 kg/hr
+- 실제 생성물: 1,240.4 kg/hr (**15.5배 과다**)
 
-Desalting:
-- [ ] Na+ 제거율 95% 확인
-- [ ] SO4²- 제거율 95% 확인
+**근본 원인 (가설)**:
+1. 배치 크기 / 시간 단위 변환 오류
+2. BioSTEAM 자동 스케일링 (배치 → 연간)
+3. 시간 단위 해석 차이 (시간당 vs 배치)
 
-Dryer:
-- [ ] 최종 수분 3% 달성
-- [ ] 고체 회수율 95% 확인
-```
+**영향도**:
+- ❌ 경제성 분석 신뢰 불가
+- ❌ 생산량 추정 무효
+- ⚠️ 공정 흐름도는 유효하나 스케일 잘못됨
+- ✅ 전력 소비 정확함
+
+**해결 방법**:
+- [ ] 배치 시간 파라미터 재검토
+- [ ] Stream 초기화 파라미터 확인
+- [ ] BioSTEAM 배치 vs 연속 운영 문서 검토
+- [ ] 스케일 1:1 조정 또는 원인 파악
+
+#### Problem #4B: 자본비 할당 실패 (MEDIUM)
+
+**증상**:
+- BioSTEAM Unit.purchase_cost는 읽기 전용 속성
+- 모든 자본비 할당 제거됨 → CAPEX = $0 보고됨
+- 장비 사이징(부피, 전력)은 정확함
+
+**해결 방법**:
+- [ ] BioSTEAM Cost object API 사용
+- [ ] 또는 외부 경제 모듈에서 비용 계산
+- [ ] tagatose_route_economics.py와 동기화
+
+#### Problem #4C: Thermo 데이터베이스 제한 (MEDIUM)
+
+**현재 상태**:
+- 'Glucose'를 D-Galactose/D-Tagatose 대체물로 사용
+- 사용자 화학물질 모두 제거됨
+- Fallback: [Water, Glucose, H2SO4, NaOH] 만 사용
+
+**미추적 항목**:
+- 설탕 개별 전환 (D-Galactose → D-Tagatose)
+- 부산물 생성 (levulinic acid, formic acid)
+- 보조인자 (NAD+, NADP+)
+- 세포 바이오매스
+
+**해결 방법**:
+- [ ] 사용자 화학물질 등록 (D-Galactose, D-Tagatose)
+- [ ] 부산물 추적 활성화
+- [ ] 보조인자 추적 추가
 
 ### 체크리스트
 - [ ] Route A 시스템 시뮬레이션 실행
@@ -325,17 +365,21 @@ Error: Unit inlet/outlet 불일치
 
 ## 요약 테이블
 
-| Issue | 상태 | 담당 | 파일 | 예상시간 |
-|-------|------|------|------|---------|
-| #1 | 🔴 대기 | 사용자 | thermo | 15-30분 |
-| #2 | 🟡 진행 | 혼합 | units | 30-60분 |
-| #3 | 🟡 진행 | 혼합 | systems | 20-30분 |
-| #4 | 🟠 보류 | 혼합 | tests | 1-2시간 |
-| #5 | 🟠 보류 | 혼합 | econ | 30-60분 |
-| #6 | 🔴 대기 | 혼합 | 다양 | 가변 |
-| #7 | 🟠 보류 | 혼합 | 모두 | 2-3시간 |
+| Issue | 상태 | 파일 | 진행상황 |
+|-------|------|------|---------|
+| #1 Thermo | 🟡 진행 | thermo | Fallback 구현 (부분) |
+| #2 Units | ✅ 완료 | units | 8개 Unit 구현 완료 |
+| #3 Systems | ✅ 완료 | systems | Route A/B 시스템 구현 |
+| #4A 스케일링 | 🔴 CRITICAL | streams | 입력값 18-36배 과다 |
+| #4B CAPEX | 🟡 진행 | units | purchase_cost 이슈 |
+| #4C Thermo | 🟡 진행 | thermo | 사용자 화학물질 제한 |
+| #5 경제 | 🟠 보류 | econ | 스케일 문제 후 진행 |
+| #6 호환성 | ✅ 완료 | units | power_utility 수정 |
+| #7 문서 | 🟠 보류 | docs | 구현 완료 후 진행 |
 
-**전체 예상 시간**: 7-11시간 (+ 디버깅 1-2시간)
+**전체 진행도**: 40% (기본 구현) / 0% (스케일 해결)
+
+**긴급 이슈**: 스케일링 오류로 경제성 분석 불가능
 
 ---
 

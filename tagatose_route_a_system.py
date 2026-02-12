@@ -42,32 +42,28 @@ from biosteam.units.tagatose_process_units import (
 # 1. Define Input Streams (값은 나중에 사용자가 수정 가능)
 # ============================================================================
 
-# Input 1: Purified D-Galactose
-# TODO: 사용자가 확인/수정할 사항
-#   - D-Galactose 110 kg/hr이 맞는가? (110 g/L × 1000L 기준)
+# Input 1: Purified D-Galactose (represented as Glucose in Thermo DB)
+# NOTE: Using Glucose as proxy for D-Galactose due to Thermo DB limitations
 feed_galactose = Stream(
     'D-Galactose_feed',
-    Glucose=110.0,  # kg/hr - 화학물질명 'Glucose' 사용 (Thermo DB 호환)
-    Water=890.0,    # kg/hr - 용매 포함
-    price=2.0,      # $/kg
+    Glucose=110.0,   # kg/hr - D-Galactose proxy
+    Water=890.0,     # kg/hr - solvent
+    price=2.0,       # $/kg
 )
 
 # Input 2: E. coli cells
-# TODO: 사용자가 확인/수정할 사항
-#   - E.coli 20 kg/hr이 맞는가? (20 g/L × 1000L 기준)
-#   - Thermo DB에 'E.coli' 없으면 수정 필요
+# NOTE: Not tracked in Thermo DB, but included for system definition
 feed_cells = Stream(
     'E.coli_cells',
-    # E.coli=20.0,  # 나중에 Thermo가 준비되면 활성화
+    # E.coli not in Thermo DB - mass tracked separately in economics
     price=50.0,      # $/kg DCW
 )
 
 # Input 3: Sodium formate (electron donor)
-# TODO: 사용자가 확인/수정할 사항
-#   - Sodium Formate 44 kg/hr이 맞는가? (화학양론 기준)
+# NOTE: Not tracked in Thermo DB, but included for system definition
 feed_formate = Stream(
     'SodiumFormate',
-    # SodiumFormate=44.0,  # Thermo 준비 후 활성화
+    # SodiumFormate not in Thermo DB - mass tracked separately
     price=0.25,      # $/kg
 )
 
@@ -121,7 +117,7 @@ product.price = 10.0  # $/kg (시장 가격 기본값)
 
 route_a_system = System(
     ID='Route_A_System',
-    units=(U301, U302, U303, U304, U305),
+    path=(U301, U302, U303, U304, U305),
 )
 
 # ============================================================================
